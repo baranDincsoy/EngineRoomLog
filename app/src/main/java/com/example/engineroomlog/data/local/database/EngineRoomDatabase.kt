@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.engineroomlog.data.local.converter.Converters
+import com.example.engineroomlog.data.local.dao.CrewMemberDao
 import com.example.engineroomlog.data.local.dao.LogEntryDao
 import com.example.engineroomlog.data.local.dao.ParameterDao
 import com.example.engineroomlog.data.local.dao.ParameterGroupDao
@@ -35,4 +36,5 @@ abstract class EngineRoomDatabase : RoomDatabase() {
     abstract fun parameterDao(): ParameterDao
     abstract fun logEntryDao(): LogEntryDao
     abstract fun readingDao(): ReadingDao
+    abstract fun crewMemberDao(): CrewMemberDao
 }
