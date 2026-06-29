@@ -7,6 +7,7 @@ import com.example.engineroomlog.data.local.converter.Converters
 import com.example.engineroomlog.data.local.dao.LogEntryDao
 import com.example.engineroomlog.data.local.dao.ParameterDao
 import com.example.engineroomlog.data.local.dao.ParameterGroupDao
+import com.example.engineroomlog.data.local.dao.ReadingDao
 import com.example.engineroomlog.data.local.dao.VesselProfileDao
 import com.example.engineroomlog.data.local.entity.CrewMemberEntity
 import com.example.engineroomlog.data.local.entity.LogEntryEntity
@@ -33,4 +34,5 @@ abstract class EngineRoomDatabase : RoomDatabase() {
     abstract fun parameterGroupDao(): ParameterGroupDao
     abstract fun parameterDao(): ParameterDao
     abstract fun logEntryDao(): LogEntryDao
+    abstract fun readingDao(): ReadingDao
 }
