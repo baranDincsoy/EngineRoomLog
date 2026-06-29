@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.engineroomlog.data.local.converter.Converters
+import com.example.engineroomlog.data.local.dao.VesselProfileDao
 import com.example.engineroomlog.data.local.entity.CrewMemberEntity
 import com.example.engineroomlog.data.local.entity.LogEntryEntity
 import com.example.engineroomlog.data.local.entity.ParameterEntity
@@ -25,5 +26,5 @@ import com.example.engineroomlog.data.local.entity.VesselProfileEntity
 )
 @TypeConverters(Converters::class)
 abstract class EngineRoomDatabase : RoomDatabase() {
-    // DAOs will be declared here in the next step
+    abstract fun vesselProfileDao(): VesselProfileDao
 }
