@@ -3,8 +3,10 @@ package com.example.engineroomlog.data.local.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.example.engineroomlog.data.local.entity.LogEntryEntity
+import com.example.engineroomlog.data.local.entity.ReadingEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -34,4 +36,19 @@ interface LogEntryDao {
         startMillis: Long,
         endMillis: Long
     ): Flow<List<LogEntryEntity>>
+
+    // Atomically saves a log entry together with all its readings.
+    // Either everything is written, or nothing is — no half entries.
+    @Transaction
+    suspend fun insertEntryWithReadings(
+        logEntry: LogEntryEntity,
+        readings: List<ReadingEntity>,
+        readingDao: ReadingDao
+    ) {
+        val newLogEntryId = insert(logEntry)
+        val readingsWithId = readings.map { reading ->
+            reading.copy(logEntryId = newLogEntryId)
+        }
+        readingDao.insertAll(readingsWithId)
+    }
 }
