@@ -1,6 +1,7 @@
 package com.example.engineroomlog
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.engineroomlog.ui.theme.EngineRoomLogTheme
+import com.example.engineroomlog.ui.vesselsetup.VesselSetupScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,28 +22,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             EngineRoomLogTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
+                    VesselSetupScreen(
+                        onVesselSaved = { vesselId ->
+                            // For now, just log it — navigation comes later
+                            Log.d("EngineRoomLog", "Vessel saved with id: $vesselId")
+                        },
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    EngineRoomLogTheme {
-        Greeting("Android")
     }
 }
