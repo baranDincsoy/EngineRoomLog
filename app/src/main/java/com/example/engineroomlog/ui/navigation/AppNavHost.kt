@@ -36,7 +36,11 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         composable(Routes.LOGIN) {
             LoginScreen(
                 onLoginSuccess = { crewId, role ->
-                    navController.navigate(Routes.HOME)
+                    navController.navigate(Routes.HOME) {
+                        // Remove login from the back stack:
+                        // back button must not return to the login screen
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
                 }
             )
         }
