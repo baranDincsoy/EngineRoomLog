@@ -11,6 +11,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -28,7 +29,13 @@ fun VesselSetupScreen(
 
     // React to a successful save: navigate away once we have an id
     if (uiState.savedVesselId != null) {
-        onVesselSaved(uiState.savedVesselId!!)
+        // Navigate exactly once when the vessel is saved
+        LaunchedEffect(uiState.savedVesselId) {
+            val id = uiState.savedVesselId
+            if (id != null) {
+                onVesselSaved(id)
+            }
+        }
     }
 
     Column(

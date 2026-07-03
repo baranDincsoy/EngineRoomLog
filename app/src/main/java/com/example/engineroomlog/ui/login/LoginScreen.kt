@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -30,7 +31,14 @@ fun LoginScreen(
 
     // Fire navigation once login succeeds (simple version for now)
     if (uiState.loggedInCrewId != null && uiState.loggedInRole != null) {
-        onLoginSuccess(uiState.loggedInCrewId!!, uiState.loggedInRole!!.name)
+        // Navigate exactly once when login succeeds
+        LaunchedEffect(uiState.loggedInCrewId) {
+            val crewId = uiState.loggedInCrewId
+            val role = uiState.loggedInRole
+            if (crewId != null && role != null) {
+                onLoginSuccess(crewId, role.name)
+            }
+        }
     }
 
     Column(

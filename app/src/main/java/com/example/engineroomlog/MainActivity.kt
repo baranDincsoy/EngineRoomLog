@@ -18,6 +18,7 @@ import com.example.engineroomlog.data.local.database.DatabaseProvider
 import com.example.engineroomlog.data.local.entity.CrewMemberEntity
 import com.example.engineroomlog.data.local.model.CrewRole
 import com.example.engineroomlog.ui.login.LoginScreen
+import com.example.engineroomlog.ui.navigation.AppNavHost
 import com.example.engineroomlog.ui.theme.EngineRoomLogTheme
 import com.example.engineroomlog.ui.vesselsetup.VesselSetupScreen
 import kotlinx.coroutines.launch
@@ -46,12 +47,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             EngineRoomLogTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LoginScreen(
-                        onLoginSuccess = { crewId, role ->
-                            Log.d("EngineRoomLog", "Logged in! crewId=$crewId, role=$role")
-                        },
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    AppNavHost(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
