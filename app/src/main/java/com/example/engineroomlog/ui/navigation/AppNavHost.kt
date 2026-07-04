@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.engineroomlog.ui.logentry.LogEntryScreen
 import com.example.engineroomlog.ui.login.LoginScreen
 import com.example.engineroomlog.ui.vesselsetup.VesselSetupScreen
 
@@ -46,8 +47,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         }
 
         composable(Routes.HOME) {
-            // Placeholder until we build the real entry screen
-            Text("Home — logged in!")
+            LogEntryScreen()
         }
     }
 }
