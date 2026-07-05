@@ -26,6 +26,22 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
 
     init {
         observeGroups()
+        observeTodaysEntries()
+    }
+    private fun observeTodaysEntries() {
+        viewModelScope.launch {
+            val startOfDay = java.util.Calendar.getInstance().apply {
+                set(java.util.Calendar.HOUR_OF_DAY, 0)
+                set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 0)
+                set(java.util.Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            val endOfDay = startOfDay + 24 * 60 * 60 * 1000
+
+            logEntryDao.getEntriesInRange(1, startOfDay, endOfDay).collect { entries ->
+                _uiState.update { it.copy(todaysEntries = entries) }
+            }
+        }
     }
 
     private fun observeGroups() {

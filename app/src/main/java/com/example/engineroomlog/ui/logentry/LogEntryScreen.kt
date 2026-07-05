@@ -36,6 +36,28 @@ fun LogEntryScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        // --- Today's entries: once, BEFORE the groups ---
+        item(key = "today_header") {
+            Text(
+                text = "Today's entries: ${uiState.todaysEntries.size}",
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(top = 16.dp)
+            )
+        }
+
+        items(
+            items = uiState.todaysEntries,
+            key = { "entry_${it.id}" }
+        ) { entry ->
+            val time = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+                .format(java.util.Date(entry.timestamp))
+            Text(
+                text = "• $time — ${entry.collectedByName} (${entry.status})",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        // --- Groups and their parameters ---
         uiState.groups.forEach { groupWithParams ->
 
             item(key = "group_${groupWithParams.group.id}") {
@@ -48,7 +70,7 @@ fun LogEntryScreen(
 
             items(
                 items = groupWithParams.parameters,
-                key = { it.id }
+                key = { "param_${it.id}" }
             ) { parameter ->
                 ParameterRow(
                     parameter = parameter,
@@ -56,9 +78,9 @@ fun LogEntryScreen(
                     onValueChange = { viewModel.onValueChange(parameter.id, it) }
                 )
             }
-        }   // <-- forEach ends HERE
+        }
 
-        // Save button: exactly once, after all groups
+        // --- Save button: once, AFTER the groups ---
         item(key = "save_button") {
             Button(
                 onClick = { viewModel.saveEntry() },
@@ -70,7 +92,7 @@ fun LogEntryScreen(
                 Text(if (uiState.isSaving) "Saving…" else "Save entry")
             }
         }
-    }   // <-- LazyColumn ends here
+    }
 }
 
 @Composable
