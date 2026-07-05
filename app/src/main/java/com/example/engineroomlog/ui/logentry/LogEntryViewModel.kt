@@ -4,6 +4,10 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.engineroomlog.data.local.database.DatabaseProvider
+import com.example.engineroomlog.data.local.entity.LogEntryEntity
+import com.example.engineroomlog.data.local.entity.ReadingEntity
+import com.example.engineroomlog.data.local.model.EntryStatus
+import com.example.engineroomlog.data.local.model.OperationalState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,4 +44,48 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
             it.copy(draftValues = it.draftValues + (parameterId to value))
         }
     }
+
+    fun saveEntry() {
+        val drafts = _uiState.value.draftValues.filterValues { it.isNotBlank() }
+
+        if (drafts.isEmpty()) {
+            _uiState.update { it.copy(errorMessage = "Enter at least one value") }
+            return
+        }
+
+        _uiState.update { it.copy(isSaving = true, errorMessage = null) }
+
+        viewModelScope.launch {
+            val entry = LogEntryEntity(
+                vesselProfileId = 1,
+                timestamp = System.currentTimeMillis(),
+                watch = "12-16",                      // TODO: derive from clock later
+                state = OperationalState.AT_SEA,      // TODO: sea/port toggle later
+                status = EntryStatus.COLLECTING,
+                collectedByName = "Test Admin",       // TODO: from logged-in user later
+                collectedByCrewId = 1,
+                collectedAt = System.currentTimeMillis(),
+                postedByName = null,
+                postedByCrewId = null,
+                postedAt = null,
+                remarks = null
+            )
+
+            val readings = drafts.map { (parameterId, value) ->
+                ReadingEntity(
+                    logEntryId = 0,   // real id is stamped inside the transaction
+                    parameterId = parameterId,
+                    value = value.trim()
+                )
+            }
+
+            val entryId = logEntryDao.insertEntryWithReadings(entry, readings, readingDao)
+
+            _uiState.update {
+                it.copy(isSaving = false, savedEntryId = entryId, draftValues = emptyMap())
+            }
+        }
+    }
+
 }
+

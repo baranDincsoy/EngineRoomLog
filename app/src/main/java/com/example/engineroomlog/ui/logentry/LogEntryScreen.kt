@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -37,7 +38,6 @@ fun LogEntryScreen(
     ) {
         uiState.groups.forEach { groupWithParams ->
 
-            // Group header
             item(key = "group_${groupWithParams.group.id}") {
                 Text(
                     text = groupWithParams.group.name,
@@ -46,7 +46,6 @@ fun LogEntryScreen(
                 )
             }
 
-            // Parameter rows of this group
             items(
                 items = groupWithParams.parameters,
                 key = { it.id }
@@ -57,8 +56,21 @@ fun LogEntryScreen(
                     onValueChange = { viewModel.onValueChange(parameter.id, it) }
                 )
             }
+        }   // <-- forEach ends HERE
+
+        // Save button: exactly once, after all groups
+        item(key = "save_button") {
+            Button(
+                onClick = { viewModel.saveEntry() },
+                enabled = !uiState.isSaving,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 24.dp)
+            ) {
+                Text(if (uiState.isSaving) "Saving…" else "Save entry")
+            }
         }
-    }
+    }   // <-- LazyColumn ends here
 }
 
 @Composable

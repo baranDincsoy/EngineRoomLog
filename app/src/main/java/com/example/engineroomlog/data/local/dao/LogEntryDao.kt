@@ -37,18 +37,17 @@ interface LogEntryDao {
         endMillis: Long
     ): Flow<List<LogEntryEntity>>
 
-    // Atomically saves a log entry together with all its readings.
-    // Either everything is written, or nothing is — no half entries.
     @Transaction
     suspend fun insertEntryWithReadings(
         logEntry: LogEntryEntity,
         readings: List<ReadingEntity>,
         readingDao: ReadingDao
-    ) {
+    ): Long {
         val newLogEntryId = insert(logEntry)
         val readingsWithId = readings.map { reading ->
             reading.copy(logEntryId = newLogEntryId)
         }
         readingDao.insertAll(readingsWithId)
+        return newLogEntryId
     }
 }
