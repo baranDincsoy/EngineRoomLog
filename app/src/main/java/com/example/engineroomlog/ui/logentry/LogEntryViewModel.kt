@@ -6,7 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.engineroomlog.data.local.database.DatabaseProvider
 import com.example.engineroomlog.data.local.entity.CrewMemberEntity
 import com.example.engineroomlog.data.local.entity.LogEntryEntity
+import com.example.engineroomlog.data.local.entity.ParameterEntity
 import com.example.engineroomlog.data.local.entity.ReadingEntity
+import com.example.engineroomlog.data.local.model.Cadence
 import com.example.engineroomlog.data.local.model.EntryStatus
 import com.example.engineroomlog.data.local.model.OperationalState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +27,7 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
     private val _uiState = MutableStateFlow(LogEntryUiState())
     val uiState: StateFlow<LogEntryUiState> = _uiState.asStateFlow()
     private var activeCrew: CrewMemberEntity? = null
+    private val paramDao = db.parameterDao()
 
     fun setActiveCrew(crewId: Long) {
         viewModelScope.launch {
@@ -65,6 +68,30 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun addParameter(
+        groupId: Long,
+        name: String,
+        unit: String?,
+        state: OperationalState
+    ) {
+        val trimmedName = name.trim()
+        if (trimmedName.isEmpty()) return
+
+        viewModelScope.launch {
+            val nextOrder = (paramDao.getMaxDisplayOrder(groupId) ?: -1) + 1
+            paramDao.insert(
+                ParameterEntity(
+                    groupId = groupId,
+                    name = trimmedName,
+                    unit = unit?.trim()?.ifEmpty { null },
+                    state = state,
+                    cadence = Cadence.HOURLY,
+                    displayOrder = nextOrder,
+                    isDefault = false
+                )
+            )
+        }
+    }
     fun onValueChange(parameterId: Long, value: String) {
         _uiState.update {
             it.copy(draftValues = it.draftValues + (parameterId to value))

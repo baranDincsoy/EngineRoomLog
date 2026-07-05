@@ -16,10 +16,14 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -35,7 +39,7 @@ fun LogEntryScreen(
     viewModel: LogEntryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
+    var showAddDialog by remember { mutableStateOf(false) }
     // Tell the ViewModel who is logged in (once per crewId)
     LaunchedEffect(crewId) {
         viewModel.setActiveCrew(crewId)
@@ -109,7 +113,12 @@ fun LogEntryScreen(
                 )
             }
         }
-
+        item(key = "add_parameter") {
+            TextButton(
+                onClick = { showAddDialog = true },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("+ Add parameter") }
+        }
         // --- Save button: once, AFTER the groups ---
         item(key = "save_button") {
             Button(
@@ -122,6 +131,16 @@ fun LogEntryScreen(
                 Text(if (uiState.isSaving) "Saving…" else "Save entry")
             }
         }
+    }
+    if (showAddDialog) {
+        AddParameterDialog(
+            groups = uiState.groups.map { it.group },
+            onConfirm = { groupId, name, unit, state ->
+                viewModel.addParameter(groupId, name, unit, state)
+                showAddDialog = false
+            },
+            onDismiss = { showAddDialog = false }
+        )
     }
 }
 

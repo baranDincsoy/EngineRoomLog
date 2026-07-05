@@ -24,6 +24,7 @@ interface ParameterDao {
     )
     fun getParametersForGroup(groupId: Long): Flow<List<ParameterEntity>>
 
-    // Active parameters filtered by operational state (sea/port view)
+    @Query("SELECT MAX(displayOrder) FROM parameters WHERE groupId = :groupId")
+    suspend fun getMaxDisplayOrder(groupId: Long): Int?
 
 }
