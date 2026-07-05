@@ -75,7 +75,6 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
             val entry = LogEntryEntity(
                 vesselProfileId = 1,
                 timestamp = System.currentTimeMillis(),
-                watch = "12-16",                      // TODO: derive from clock later
                 state = OperationalState.AT_SEA,      // TODO: sea/port toggle later
                 status = EntryStatus.COLLECTING,
                 collectedByName = "Test Admin",       // TODO: from logged-in user later

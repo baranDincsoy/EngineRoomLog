@@ -27,7 +27,6 @@ data class LogEntryEntity(
     val id: Long = 0,
     val vesselProfileId: Long,
     val timestamp: Long,
-    val watch: String,
     val state: OperationalState,
     val status: EntryStatus,
     // Name is snapshotted at entry time, so history survives account deletion

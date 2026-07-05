@@ -18,6 +18,7 @@ import com.example.engineroomlog.data.local.database.DatabaseProvider
 import com.example.engineroomlog.data.local.entity.CrewMemberEntity
 import com.example.engineroomlog.data.local.entity.ParameterEntity
 import com.example.engineroomlog.data.local.entity.ParameterGroupEntity
+import com.example.engineroomlog.data.local.entity.VesselProfileEntity
 import com.example.engineroomlog.data.local.model.Cadence
 import com.example.engineroomlog.data.local.model.CrewRole
 import com.example.engineroomlog.data.local.model.OperationalState
@@ -35,14 +36,19 @@ class MainActivity : ComponentActivity() {
 // TEMPORARY: seed test data so we can develop the entry screen. Remove later.
         lifecycleScope.launch {
             val db = DatabaseProvider.getDatabase(applicationContext)
+            val vesselDao = db.vesselProfileDao()
             val crewDao = db.crewMemberDao()
             val groupDao = db.parameterGroupDao()
             val paramDao = db.parameterDao()
 
+            // Ensure a vessel exists first — everything else hangs off it
+            val vesselId = vesselDao.getById(1)?.id
+                ?: vesselDao.insert(VesselProfileEntity(name = "M/V Test", imoNumber = null))
+
             if (crewDao.findByUsername("admin") == null) {
                 crewDao.insert(
                     CrewMemberEntity(
-                        vesselProfileId = 1,
+                        vesselProfileId = vesselId,
                         name = "Test Admin",
                         rank = "Chief Engineer",
                         role = CrewRole.CHIEF,

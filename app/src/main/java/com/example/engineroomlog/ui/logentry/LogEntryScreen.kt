@@ -49,10 +49,10 @@ fun LogEntryScreen(
             items = uiState.todaysEntries,
             key = { "entry_${it.id}" }
         ) { entry ->
-            val time = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+            val time = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
                 .format(java.util.Date(entry.timestamp))
             Text(
-                text = "• $time — ${entry.collectedByName} (${entry.status})",
+                text = "• $time — ${entry.collectedByName} (#${entry.collectedByCrewId})",
                 style = MaterialTheme.typography.bodySmall
             )
         }
