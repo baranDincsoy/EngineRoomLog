@@ -12,6 +12,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,6 +26,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.engineroomlog.data.local.entity.ParameterEntity
+import com.example.engineroomlog.data.local.model.OperationalState
 
 @Composable
 fun LogEntryScreen(
@@ -43,6 +47,25 @@ fun LogEntryScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        item(key = "state_selector") {
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+            ) {
+                SegmentedButton(
+                    selected = uiState.selectedState == OperationalState.AT_SEA,
+                    onClick = { viewModel.onStateSelected(OperationalState.AT_SEA) },
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                ) { Text("At Sea") }
+
+                SegmentedButton(
+                    selected = uiState.selectedState == OperationalState.IN_PORT,
+                    onClick = { viewModel.onStateSelected(OperationalState.IN_PORT) },
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                ) { Text("In Port") }
+            }
+        }
         // --- Today's entries: once, BEFORE the groups ---
         item(key = "today_header") {
             Text(
@@ -65,7 +88,7 @@ fun LogEntryScreen(
         }
 
         // --- Groups and their parameters ---
-        uiState.groups.forEach { groupWithParams ->
+        uiState.visibleGroups.forEach { groupWithParams ->
 
             item(key = "group_${groupWithParams.group.id}") {
                 Text(

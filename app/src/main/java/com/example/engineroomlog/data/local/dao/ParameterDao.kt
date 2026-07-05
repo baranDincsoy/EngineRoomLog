@@ -25,14 +25,5 @@ interface ParameterDao {
     fun getParametersForGroup(groupId: Long): Flow<List<ParameterEntity>>
 
     // Active parameters filtered by operational state (sea/port view)
-    @Query(
-        "SELECT * FROM parameters " +
-                "WHERE groupId = :groupId AND isActive = 1 " +
-                "AND (state = :state OR state = 'BOTH') " +
-                "ORDER BY displayOrder"
-    )
-    fun getParametersForGroupByState(
-        groupId: Long,
-        state: String
-    ): Flow<List<ParameterEntity>>
+
 }

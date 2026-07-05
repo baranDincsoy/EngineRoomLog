@@ -51,6 +51,9 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun onStateSelected(state: OperationalState) {
+        _uiState.update { it.copy(selectedState = state) }
+    }
     private fun observeGroups() {
         viewModelScope.launch {
             groupDao.getGroupsWithParameters(1).collect { groups ->
@@ -83,7 +86,7 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
 
                 vesselProfileId = 1,
                 timestamp = System.currentTimeMillis(),
-                state = OperationalState.AT_SEA,      // TODO: sea/port toggle later
+                state = _uiState.value.selectedState,      // TODO: sea/port toggle later
                 status = EntryStatus.COLLECTING,
                 collectedByName = activeCrew?.name ?: "Unknown",
                 collectedByCrewId = activeCrew?.id,
