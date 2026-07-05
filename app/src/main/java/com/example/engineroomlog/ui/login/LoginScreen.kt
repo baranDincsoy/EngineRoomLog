@@ -29,6 +29,7 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+
     // Fire navigation once login succeeds (simple version for now)
     if (uiState.loggedInCrewId != null && uiState.loggedInRole != null) {
         // Navigate exactly once when login succeeds

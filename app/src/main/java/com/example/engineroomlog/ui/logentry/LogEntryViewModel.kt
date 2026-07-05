@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.engineroomlog.data.local.database.DatabaseProvider
+import com.example.engineroomlog.data.local.entity.CrewMemberEntity
 import com.example.engineroomlog.data.local.entity.LogEntryEntity
 import com.example.engineroomlog.data.local.entity.ReadingEntity
 import com.example.engineroomlog.data.local.model.EntryStatus
@@ -23,7 +24,13 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
 
     private val _uiState = MutableStateFlow(LogEntryUiState())
     val uiState: StateFlow<LogEntryUiState> = _uiState.asStateFlow()
+    private var activeCrew: CrewMemberEntity? = null
 
+    fun setActiveCrew(crewId: Long) {
+        viewModelScope.launch {
+            activeCrew = db.crewMemberDao().getById(crewId)
+        }
+    }
     init {
         observeGroups()
         observeTodaysEntries()
@@ -73,12 +80,13 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
 
         viewModelScope.launch {
             val entry = LogEntryEntity(
+
                 vesselProfileId = 1,
                 timestamp = System.currentTimeMillis(),
                 state = OperationalState.AT_SEA,      // TODO: sea/port toggle later
                 status = EntryStatus.COLLECTING,
-                collectedByName = "Test Admin",       // TODO: from logged-in user later
-                collectedByCrewId = 1,
+                collectedByName = activeCrew?.name ?: "Unknown",
+                collectedByCrewId = activeCrew?.id,
                 collectedAt = System.currentTimeMillis(),
                 postedByName = null,
                 postedByCrewId = null,

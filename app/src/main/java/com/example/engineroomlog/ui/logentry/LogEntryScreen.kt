@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -25,10 +26,16 @@ import com.example.engineroomlog.data.local.entity.ParameterEntity
 
 @Composable
 fun LogEntryScreen(
+    crewId: Long,
     modifier: Modifier = Modifier,
     viewModel: LogEntryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // Tell the ViewModel who is logged in (once per crewId)
+    LaunchedEffect(crewId) {
+        viewModel.setActiveCrew(crewId)
+    }
 
     LazyColumn(
         modifier = modifier
@@ -49,7 +56,7 @@ fun LogEntryScreen(
             items = uiState.todaysEntries,
             key = { "entry_${it.id}" }
         ) { entry ->
-            val time = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+            val time = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm:ss", java.util.Locale.getDefault())
                 .format(java.util.Date(entry.timestamp))
             Text(
                 text = "• $time — ${entry.collectedByName} (#${entry.collectedByCrewId})",

@@ -24,6 +24,9 @@ interface CrewMemberDao {
     )
     suspend fun findByUsername(username: String): CrewMemberEntity?
 
+    @Query("SELECT * FROM crew_members WHERE id = :id")
+    suspend fun getById(id: Long): CrewMemberEntity?
+
     // All active crew of a vessel, for the admin/management screen
     @Query(
         "SELECT * FROM crew_members " +
