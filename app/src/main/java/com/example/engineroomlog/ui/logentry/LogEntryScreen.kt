@@ -9,7 +9,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
@@ -36,10 +40,12 @@ import com.example.engineroomlog.data.local.model.OperationalState
 fun LogEntryScreen(
     crewId: Long,
     modifier: Modifier = Modifier,
+    role: String,
     viewModel: LogEntryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+    val canEditForm = role == "ENGINEER" || role == "CHIEF"
     // Tell the ViewModel who is logged in (once per crewId)
     LaunchedEffect(crewId) {
         viewModel.setActiveCrew(crewId)
@@ -109,7 +115,9 @@ fun LogEntryScreen(
                 ParameterRow(
                     parameter = parameter,
                     value = uiState.draftValues[parameter.id] ?: "",
-                    onValueChange = { viewModel.onValueChange(parameter.id, it) }
+                    onValueChange = { viewModel.onValueChange(parameter.id, it) },
+                    onRemove = { viewModel.deactivateParameter(parameter) },
+
                 )
             }
         }
@@ -154,7 +162,9 @@ fun LogEntryScreen(
 private fun ParameterRow(
     parameter: ParameterEntity,
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    onRemove: () -> Unit,
+    canEdit : Boolean
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -178,5 +188,10 @@ private fun ParameterRow(
                 .width(40.dp)
                 .padding(start = 6.dp)
         )
+        if (canEdit) {
+            IconButton(onClick = onRemove) {
+                Icon(Icons.Default.Close, contentDescription = "Remove parameter")
+            }
+        }
     }
 }

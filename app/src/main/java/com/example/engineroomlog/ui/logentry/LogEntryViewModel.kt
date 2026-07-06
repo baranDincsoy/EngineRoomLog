@@ -64,7 +64,12 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
             }
         }
     }
-
+    fun deactivateParameter(parameter: ParameterEntity) {
+        android.util.Log.d("EngineRoomLog", "deactivate: ${parameter.name}")
+        viewModelScope.launch {
+            paramDao.update(parameter.copy(isActive = false))
+        }
+    }
     fun onStateSelected(state: OperationalState) {
         _uiState.update { it.copy(selectedState = state) }
     }

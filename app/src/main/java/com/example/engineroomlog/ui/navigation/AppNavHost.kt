@@ -1,6 +1,5 @@
 package com.example.engineroomlog.ui.navigation
 
-import android.R.attr.type
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -17,9 +16,10 @@ import com.example.engineroomlog.ui.vesselsetup.VesselSetupScreen
 object Routes {
     const val VESSEL_SETUP = "vessel_setup"
     const val LOGIN = "login"
-    const val HOME = "home/{crewId}"
+    const val HOME = "home/{crewId}/{role}"
 
-    fun homeWith(crewId: Long) = "home/$crewId"
+    fun homeWith(crewId: Long, role: String) = "home/$crewId/$role"
+
 }
 
 @Composable
@@ -42,7 +42,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         composable(Routes.LOGIN) {
             LoginScreen(
                 onLoginSuccess = { crewId, role ->
-                    navController.navigate(Routes.homeWith(crewId)) {
+                    navController.navigate(Routes.homeWith(crewId, role)) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 }
@@ -51,10 +51,14 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
         composable(
             route = Routes.HOME,
-            arguments = listOf(navArgument("crewId") { type = NavType.LongType })
+            arguments = listOf(
+                navArgument("crewId") { type = NavType.LongType },
+                navArgument("role") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
             val crewId = backStackEntry.arguments?.getLong("crewId") ?: 0L
-            LogEntryScreen(crewId = crewId)
+            val role = backStackEntry.arguments?.getString("role") ?: "OILER"
+            LogEntryScreen(crewId = crewId, role = role)
         }
     }
 }
