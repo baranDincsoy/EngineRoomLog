@@ -15,8 +15,8 @@ data class LogEntryUiState(
     val draftValues: Map<Long, String> = emptyMap(),
     val isSaving: Boolean = false,
     val savedEntryId: Long? = null,
-    val errorMessage: String? = null
-
+    val errorMessage: String? = null,
+    val lastCreatedGroupId: Long? = null,
 ) {
     val visibleGroups: List<GroupWithParameters>
         get() = groups.map { gwp ->

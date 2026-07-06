@@ -24,12 +24,15 @@ import androidx.compose.ui.unit.dp
 import com.example.engineroomlog.data.local.entity.ParameterGroupEntity
 import com.example.engineroomlog.data.local.model.OperationalState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.runtime.LaunchedEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddParameterDialog(
     groups: List<ParameterGroupEntity>,
+    lastCreatedGroupId: Long?,
     onConfirm: (groupId: Long, name: String, unit: String?, state: OperationalState) -> Unit,
+    onCreateGroup: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
@@ -37,6 +40,16 @@ fun AddParameterDialog(
     var selectedGroup by remember { mutableStateOf(groups.firstOrNull()) }
     var selectedState by remember { mutableStateOf(OperationalState.AT_SEA) }
     var groupMenuExpanded by remember { mutableStateOf(false) }
+    var showNewGroupDialog by remember { mutableStateOf(false) }
+    var newGroupName by remember { mutableStateOf("") }
+
+    // When a new group is created, auto-select it in the dropdown
+    LaunchedEffect(lastCreatedGroupId, groups) {
+        if (lastCreatedGroupId != null) {
+            groups.firstOrNull { it.id == lastCreatedGroupId }
+                ?.let { selectedGroup = it }
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -59,7 +72,8 @@ fun AddParameterDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-
+                // TEMPORARY DEBUG — remove later
+                Text("DEBUG v2: ${groups.size} groups: ${groups.joinToString { it.name }}")
                 ExposedDropdownMenuBox(
                     expanded = groupMenuExpanded,
                     onExpandedChange = { groupMenuExpanded = it }
@@ -89,6 +103,13 @@ fun AddParameterDialog(
                                 }
                             )
                         }
+                        DropdownMenuItem(
+                            text = { Text("+ New group…") },
+                            onClick = {
+                                groupMenuExpanded = false
+                                showNewGroupDialog = true
+                            }
+                        )
                     }
                 }
 
@@ -119,4 +140,31 @@ fun AddParameterDialog(
             TextButton(onClick = onDismiss) { Text("Cancel") }
         }
     )
+    if (showNewGroupDialog) {
+        AlertDialog(
+            onDismissRequest = { showNewGroupDialog = false },
+            title = { Text("New group") },
+            text = {
+                OutlinedTextField(
+                    value = newGroupName,
+                    onValueChange = { newGroupName = it },
+                    label = { Text("Group name") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onCreateGroup(newGroupName)      // ← önce bu çalışır
+                        newGroupName = ""
+                        showNewGroupDialog = false       // ← pencereyi bu kapatır
+                    },
+                    enabled = newGroupName.isNotBlank()
+                ) { Text("Create") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNewGroupDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
 }

@@ -33,4 +33,7 @@ interface ParameterGroupDao {
                 "ORDER BY displayOrder"
     )
     fun getGroupsWithParameters(vesselId: Long): Flow<List<GroupWithParameters>>
+
+    @Query("SELECT MAX(displayOrder) FROM parameter_groups WHERE vesselProfileId = :vesselId")
+    suspend fun getMaxDisplayOrder(vesselId: Long): Int?
 }

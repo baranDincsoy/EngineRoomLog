@@ -135,11 +135,17 @@ fun LogEntryScreen(
     if (showAddDialog) {
         AddParameterDialog(
             groups = uiState.groups.map { it.group },
+            lastCreatedGroupId = uiState.lastCreatedGroupId,
             onConfirm = { groupId, name, unit, state ->
                 viewModel.addParameter(groupId, name, unit, state)
                 showAddDialog = false
             },
-            onDismiss = { showAddDialog = false }
+            onDismiss = { showAddDialog = false },
+            onCreateGroup = { groupName ->
+                android.util.Log.d("EngineRoomLog", "onCreateGroup called: $groupName")
+                viewModel.addGroup(groupName)
+
+            },
         )
     }
 }

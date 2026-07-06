@@ -7,6 +7,7 @@ import com.example.engineroomlog.data.local.database.DatabaseProvider
 import com.example.engineroomlog.data.local.entity.CrewMemberEntity
 import com.example.engineroomlog.data.local.entity.LogEntryEntity
 import com.example.engineroomlog.data.local.entity.ParameterEntity
+import com.example.engineroomlog.data.local.entity.ParameterGroupEntity
 import com.example.engineroomlog.data.local.entity.ReadingEntity
 import com.example.engineroomlog.data.local.model.Cadence
 import com.example.engineroomlog.data.local.model.EntryStatus
@@ -14,6 +15,7 @@ import com.example.engineroomlog.data.local.model.OperationalState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -28,6 +30,7 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
     val uiState: StateFlow<LogEntryUiState> = _uiState.asStateFlow()
     private var activeCrew: CrewMemberEntity? = null
     private val paramDao = db.parameterDao()
+    private var activeVesselId: Long = 1L
 
     fun setActiveCrew(crewId: Long) {
         viewModelScope.launch {
@@ -35,8 +38,16 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
         }
     }
     init {
-        observeGroups()
-        observeTodaysEntries()
+        viewModelScope.launch {
+            // Resolve the real vessel id once, before starting any observers
+            val vessel = db.vesselProfileDao().getActiveVessels().first().firstOrNull()
+            if (vessel != null) {
+                activeVesselId = vessel.id
+            }
+            android.util.Log.d("EngineRoomLog", "active vessel id = $activeVesselId")
+            observeGroups()
+            observeTodaysEntries()
+        }
     }
     private fun observeTodaysEntries() {
         viewModelScope.launch {
@@ -48,7 +59,7 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
             }.timeInMillis
             val endOfDay = startOfDay + 24 * 60 * 60 * 1000
 
-            logEntryDao.getEntriesInRange(1, startOfDay, endOfDay).collect { entries ->
+            logEntryDao.getEntriesInRange(activeVesselId, startOfDay, endOfDay).collect { entries ->
                 _uiState.update { it.copy(todaysEntries = entries) }
             }
         }
@@ -59,7 +70,7 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
     }
     private fun observeGroups() {
         viewModelScope.launch {
-            groupDao.getGroupsWithParameters(1).collect { groups ->
+            groupDao.getGroupsWithParameters(activeVesselId).collect { groups ->
                 val sorted = groups.map { gwp ->
                     gwp.copy(parameters = gwp.parameters.sortedBy { it.displayOrder })
                 }
@@ -68,6 +79,27 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun addGroup(name: String) {
+        val trimmedName = name.trim()
+        if (trimmedName.isEmpty()) return
+
+        viewModelScope.launch {
+            try {
+                val nextOrder = (groupDao.getMaxDisplayOrder(activeVesselId) ?: -1) + 1
+                val newId = groupDao.insert(
+                    ParameterGroupEntity(
+                        vesselProfileId = activeVesselId,
+                        name = trimmedName,
+                        displayOrder = nextOrder
+                    )
+                )
+                _uiState.update { it.copy(lastCreatedGroupId = newId) }
+                android.util.Log.d("EngineRoomLog", "Group inserted with id=$newId")
+            } catch (e: Exception) {
+                android.util.Log.e("EngineRoomLog", "addGroup failed", e)
+            }
+        }
+    }
     fun addParameter(
         groupId: Long,
         name: String,
