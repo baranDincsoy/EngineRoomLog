@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.engineroomlog.ui.logentry.LogEntryScreen
 import com.example.engineroomlog.ui.login.LoginScreen
+import com.example.engineroomlog.ui.managegroups.ManageGroupsScreen
 import com.example.engineroomlog.ui.vesselsetup.VesselSetupScreen
 
 // Route names live in one place so we never mistype them
@@ -17,6 +18,7 @@ object Routes {
     const val VESSEL_SETUP = "vessel_setup"
     const val LOGIN = "login"
     const val HOME = "home/{crewId}/{role}"
+    const val MANAGE_GROUPS = "manage_groups"
 
     fun homeWith(crewId: Long, role: String) = "home/$crewId/$role"
 
@@ -54,11 +56,22 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             arguments = listOf(
                 navArgument("crewId") { type = NavType.LongType },
                 navArgument("role") { type = NavType.StringType }
+
             )
         ) { backStackEntry ->
             val crewId = backStackEntry.arguments?.getLong("crewId") ?: 0L
             val role = backStackEntry.arguments?.getString("role") ?: "OILER"
-            LogEntryScreen(crewId = crewId, role = role)
+            LogEntryScreen(
+                crewId = crewId,
+                role = role,
+                onManageGroups = { navController.navigate(Routes.MANAGE_GROUPS) }
+            )
+        }
+
+        composable(Routes.MANAGE_GROUPS) {
+            ManageGroupsScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }

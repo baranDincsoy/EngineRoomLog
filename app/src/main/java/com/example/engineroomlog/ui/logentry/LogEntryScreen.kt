@@ -41,6 +41,7 @@ fun LogEntryScreen(
     crewId: Long,
     modifier: Modifier = Modifier,
     role: String,
+    onManageGroups: () -> Unit,
     viewModel: LogEntryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -120,13 +121,24 @@ fun LogEntryScreen(
                     canEdit = canEditForm
                 )
             }
+        }   // forEach ends
+
+        if (canEditForm) {
+            item(key = "add_parameter") {
+                TextButton(
+                    onClick = { showAddDialog = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("+ Add parameter") }
+            }
+
+            item(key = "manage_groups") {
+                TextButton(
+                    onClick = onManageGroups,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Manage groups") }
+            }
         }
-        item(key = "add_parameter") {
-            TextButton(
-                onClick = { showAddDialog = true },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("+ Add parameter") }
-        }
+
         // --- Save button: once, AFTER the groups ---
         item(key = "save_button") {
             Button(
@@ -139,7 +151,8 @@ fun LogEntryScreen(
                 Text(if (uiState.isSaving) "Saving…" else "Save entry")
             }
         }
-    }
+    }   // LazyColumn ends
+
     if (showAddDialog) {
         AddParameterDialog(
             groups = uiState.groups.map { it.group },
