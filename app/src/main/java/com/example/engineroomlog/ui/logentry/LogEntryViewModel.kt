@@ -77,7 +77,11 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             groupDao.getGroupsWithParameters(activeVesselId).collect { groups ->
                 val sorted = groups.map { gwp ->
-                    gwp.copy(parameters = gwp.parameters.sortedBy { it.displayOrder })
+                    gwp.copy(
+                        parameters = gwp.parameters
+                            .filter { it.isActive }
+                            .sortedBy { it.displayOrder }
+                    )
                 }
                 _uiState.update { it.copy(groups = sorted) }
             }

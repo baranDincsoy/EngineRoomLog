@@ -117,7 +117,7 @@ fun LogEntryScreen(
                     value = uiState.draftValues[parameter.id] ?: "",
                     onValueChange = { viewModel.onValueChange(parameter.id, it) },
                     onRemove = { viewModel.deactivateParameter(parameter) },
-
+                    canEdit = canEditForm
                 )
             }
         }
