@@ -1,5 +1,7 @@
 package com.example.engineroomlog.ui.managegroups
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +17,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -29,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.engineroomlog.data.local.entity.ParameterEntity
 import com.example.engineroomlog.data.local.entity.ParameterGroupEntity
+import com.example.engineroomlog.data.local.model.OperationalState
 
 @Composable
 fun ManageGroupsScreen(
@@ -41,6 +47,7 @@ fun ManageGroupsScreen(
     var renameTarget by remember { mutableStateOf<ParameterGroupEntity?>(null) }
     var deleteTarget by remember { mutableStateOf<ParameterGroupEntity?>(null) }
     var moveTarget by remember { mutableStateOf<ParameterEntity?>(null) }
+    var editTarget by remember { mutableStateOf<ParameterEntity?>(null) }
 
     LazyColumn(
         modifier = modifier
@@ -89,6 +96,9 @@ fun ManageGroupsScreen(
                     )
                     TextButton(onClick = { moveTarget = parameter }) {
                         Text("Move")
+                    }
+                    TextButton(onClick = { editTarget = parameter }) {
+                        Text("Edit")
                     }
                 }
             }
@@ -168,6 +178,57 @@ fun ManageGroupsScreen(
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { moveTarget = null }) { Text("Cancel") }
+            }
+        )
+    }
+    // --- Edit parameter dialog ---
+    editTarget?.let { parameter ->
+        var editName by remember(parameter.id) { mutableStateOf(parameter.name) }
+        var editUnit by remember(parameter.id) { mutableStateOf(parameter.unit ?: "") }
+        var editState by remember(parameter.id) { mutableStateOf(parameter.state) }
+
+        AlertDialog(
+            onDismissRequest = { editTarget = null },
+            title = { Text("Edit parameter") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value = editName,
+                        onValueChange = { editName = it },
+                        label = { Text("Name") },
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = editUnit,
+                        onValueChange = { editUnit = it },
+                        label = { Text("Unit (optional)") },
+                        singleLine = true
+                    )
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                        OperationalState.entries.forEachIndexed { index, state ->
+                            SegmentedButton(
+                                selected = editState == state,
+                                onClick = { editState = state },
+                                shape = SegmentedButtonDefaults.itemShape(
+                                    index = index,
+                                    count = OperationalState.entries.size
+                                )
+                            ) { Text(state.name.replace("_", " ")) }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.updateParameter(parameter, editName, editUnit, editState)
+                        editTarget = null
+                    },
+                    enabled = editName.isNotBlank()
+                ) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(onClick = { editTarget = null }) { Text("Cancel") }
             }
         )
     }

@@ -7,6 +7,7 @@ import com.example.engineroomlog.data.local.database.DatabaseProvider
 import com.example.engineroomlog.data.local.entity.GroupWithParameters
 import com.example.engineroomlog.data.local.entity.ParameterEntity
 import com.example.engineroomlog.data.local.entity.ParameterGroupEntity
+import com.example.engineroomlog.data.local.model.OperationalState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -61,6 +62,25 @@ class ManageGroupsViewModel(application: Application) : AndroidViewModel(applica
             val nextOrder = (paramDao.getMaxDisplayOrder(targetGroupId) ?: -1) + 1
             paramDao.update(
                 parameter.copy(groupId = targetGroupId, displayOrder = nextOrder)
+            )
+        }
+    }
+
+    fun updateParameter(
+        parameter: ParameterEntity,
+        newName: String,
+        newUnit: String?,
+        newState: OperationalState
+    ) {
+        val trimmed = newName.trim()
+        if (trimmed.isEmpty()) return
+        viewModelScope.launch {
+            paramDao.update(
+                parameter.copy(
+                    name = trimmed,
+                    unit = newUnit?.trim()?.ifEmpty { null },
+                    state = newState
+                )
             )
         }
     }
