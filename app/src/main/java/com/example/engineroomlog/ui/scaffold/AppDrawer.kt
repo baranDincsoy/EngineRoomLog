@@ -29,6 +29,7 @@ fun AppScaffold(
     canEditForm: Boolean,
     onManageGroups: () -> Unit,
     onSignOut: () -> Unit,
+    onJournal: () -> Unit,
     content: @Composable (Modifier) -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -41,6 +42,16 @@ fun AppScaffold(
                 Text(
                     text = "EngineRoomLog",
                     modifier = Modifier.padding(16.dp)
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("Journal") },
+                    icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onJournal()
+                    }
                 )
 
                 if (canEditForm) {
@@ -64,6 +75,7 @@ fun AppScaffold(
                         onSignOut()
                     }
                 )
+
             }
         }
     ) {

@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.engineroomlog.ui.journal.JournalScreen
 import com.example.engineroomlog.ui.logentry.LogEntryScreen
 import com.example.engineroomlog.ui.login.LoginScreen
 import com.example.engineroomlog.ui.managegroups.ManageGroupsScreen
@@ -20,6 +21,7 @@ object Routes {
     const val LOGIN = "login"
     const val HOME = "home/{crewId}/{role}"
     const val MANAGE_GROUPS = "manage_groups"
+    const val JOURNAL = "journal"
 
 
     fun homeWith(crewId: Long, role: String) = "home/$crewId/$role"
@@ -61,6 +63,10 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             )
         }
 
+        composable(Routes.JOURNAL) {
+            JournalScreen()
+        }
+
         composable(
             route = Routes.HOME,
             arguments = listOf(
@@ -76,6 +82,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         AppScaffold(
             title = "Engine Log",
             canEditForm = canEdit,
+            onJournal = { navController.navigate(Routes.JOURNAL) },
             onManageGroups = { navController.navigate(Routes.MANAGE_GROUPS) },
             onSignOut = {
                 navController.navigate(Routes.LOGIN) {
