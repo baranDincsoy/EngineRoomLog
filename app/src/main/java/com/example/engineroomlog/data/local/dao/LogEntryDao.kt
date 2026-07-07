@@ -6,6 +6,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.example.engineroomlog.data.local.entity.LogEntryEntity
+import com.example.engineroomlog.data.local.entity.LogEntryWithReadings
 import com.example.engineroomlog.data.local.entity.ReadingEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -50,4 +51,20 @@ interface LogEntryDao {
         readingDao.insertAll(readingsWithId)
         return newLogEntryId
     }
+
+    // A day's journal: entries with their readings, oldest first (journal order)
+    @Transaction
+    @Query(
+        "SELECT * FROM log_entries " +
+                "WHERE vesselProfileId = :vesselId " +
+                "AND timestamp BETWEEN :startMillis AND :endMillis " +
+                "AND isArchived = 0 " +
+                "ORDER BY timestamp ASC"
+    )
+    fun getJournalForRange(
+        vesselId: Long,
+        startMillis: Long,
+        endMillis: Long
+    ): Flow<List<LogEntryWithReadings>>
+
 }
