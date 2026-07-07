@@ -41,7 +41,6 @@ fun LogEntryScreen(
     crewId: Long,
     modifier: Modifier = Modifier,
     role: String,
-    onManageGroups: () -> Unit,
     viewModel: LogEntryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -131,12 +130,6 @@ fun LogEntryScreen(
                 ) { Text("+ Add parameter") }
             }
 
-            item(key = "manage_groups") {
-                TextButton(
-                    onClick = onManageGroups,
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("Manage groups") }
-            }
         }
 
         // --- Save button: once, AFTER the groups ---
