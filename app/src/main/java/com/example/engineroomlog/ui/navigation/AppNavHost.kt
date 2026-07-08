@@ -77,7 +77,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 private fun AppNavGraph(
     navController: androidx.navigation.NavHostController,
     modifier: Modifier,
-    onRoleResolved: (String) -> Unit
+    onRoleResolved: (String) -> Unit,
+
 ) {
     NavHost(
         navController = navController,
@@ -114,7 +115,11 @@ private fun AppNavGraph(
         ) { backStackEntry ->
             val crewId = backStackEntry.arguments?.getLong("crewId") ?: 0L
             val role = backStackEntry.arguments?.getString("role") ?: "OILER"
-            LogEntryScreen(crewId = crewId, role = role)
+            LogEntryScreen(
+                crewId = crewId,
+                role = role,
+                onExitConfirmed = { navController.popBackStack() }
+            )
         }
     }
 }

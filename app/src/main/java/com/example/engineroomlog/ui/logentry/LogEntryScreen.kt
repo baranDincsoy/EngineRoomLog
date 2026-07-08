@@ -1,5 +1,6 @@
 package com.example.engineroomlog.ui.logentry
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,11 +43,24 @@ fun LogEntryScreen(
     crewId: Long,
     modifier: Modifier = Modifier,
     role: String,
+    onExitConfirmed: () -> Unit,
     viewModel: LogEntryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     val canEditForm = role == "ENGINEER" || role == "CHIEF"
+    var showSaveConfirm by remember { mutableStateOf(false) }
+
+    var showExitWarning by remember { mutableStateOf(false) }
+    val hasUnsavedValues = uiState.draftValues.any { it.value.isNotBlank() }
+
+    BackHandler(enabled = hasUnsavedValues) {
+        showExitWarning = true
+    }
+
+
+
+
     // Tell the ViewModel who is logged in (once per crewId)
     LaunchedEffect(crewId) {
         viewModel.setActiveCrew(crewId)
@@ -77,17 +92,6 @@ fun LogEntryScreen(
             }
         }
 
-        items(
-            items = uiState.todaysEntries,
-            key = { "entry_${it.id}" }
-        ) { entry ->
-            val time = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm:ss", java.util.Locale.getDefault())
-                .format(java.util.Date(entry.timestamp))
-            Text(
-                text = "• $time — ${entry.collectedByName} (#${entry.collectedByCrewId})",
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
 
         // --- Groups and their parameters ---
         uiState.visibleGroups.forEach { groupWithParams ->
@@ -127,7 +131,7 @@ fun LogEntryScreen(
         // --- Save button: once, AFTER the groups ---
         item(key = "save_button") {
             Button(
-                onClick = { viewModel.saveEntry() },
+                onClick = { showSaveConfirm = true },
                 enabled = !uiState.isSaving,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -154,6 +158,45 @@ fun LogEntryScreen(
             },
         )
     }
+
+    if (showSaveConfirm) {
+        val filledCount = uiState.draftValues.count { it.value.isNotBlank() }
+        AlertDialog(
+            onDismissRequest = { showSaveConfirm = false },
+            title = { Text("Submit entry?") },
+            text = { Text("$filledCount value(s) will be saved to the log.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.saveEntry()
+                        showSaveConfirm = false
+                    }
+                ) { Text("Submit") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSaveConfirm = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    if (showExitWarning) {
+        AlertDialog(
+            onDismissRequest = { showExitWarning = false },
+            title = { Text("Unsaved values") },
+            text = { Text("You have entered values that are not submitted. Leave anyway?") },
+            confirmButton = {
+                Button(onClick = {
+                    showExitWarning = false
+                    onExitConfirmed()
+                }) { Text("Leave") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExitWarning = false }) { Text("Stay") }
+            }
+        )
+    }
+
+
 }
 
 @Composable
