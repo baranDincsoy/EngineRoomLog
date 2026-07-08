@@ -30,6 +30,7 @@ fun AppScaffold(
     onManageGroups: () -> Unit,
     onSignOut: () -> Unit,
     onJournal: () -> Unit,
+    onEntry: () -> Unit,
     content: @Composable (Modifier) -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -42,6 +43,16 @@ fun AppScaffold(
                 Text(
                     text = "EngineRoomLog",
                     modifier = Modifier.padding(16.dp)
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("Entry") },
+                    icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onEntry()
+                    }
                 )
 
                 NavigationDrawerItem(

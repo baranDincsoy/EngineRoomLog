@@ -76,14 +76,6 @@ fun LogEntryScreen(
                 ) { Text("In Port") }
             }
         }
-        // --- Today's entries: once, BEFORE the groups ---
-        item(key = "today_header") {
-            Text(
-                text = "Today's entries: ${uiState.todaysEntries.size}",
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(top = 16.dp)
-            )
-        }
 
         items(
             items = uiState.todaysEntries,

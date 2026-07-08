@@ -2,10 +2,15 @@ package com.example.engineroomlog.ui.navigation
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.engineroomlog.ui.journal.JournalScreen
@@ -32,24 +37,59 @@ object Routes {
 fun AppNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
 
+    // Which route is on screen right now?
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
 
+    // Role travels with the HOME route args; remember it after login
+    var currentRole by rememberSaveable { mutableStateOf("OILER") }
+    val canEdit = currentRole == "ENGINEER" || currentRole == "CHIEF"
 
+    val isLoggedInArea = currentRoute != null &&
+            currentRoute != Routes.LOGIN &&
+            currentRoute != Routes.VESSEL_SETUP
+
+    if (isLoggedInArea) {
+        AppScaffold(
+            title = when (currentRoute) {
+                Routes.JOURNAL -> "Journal"
+                Routes.MANAGE_GROUPS -> "Manage groups"
+                else -> "Engine Log"
+            },
+            canEditForm = canEdit,
+            onJournal = { navController.navigate(Routes.JOURNAL) },
+            onManageGroups = { navController.navigate(Routes.MANAGE_GROUPS) },
+            onEntry = { navController.popBackStack(Routes.HOME, inclusive = false) },
+            onSignOut = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        ) { paddingModifier ->
+            AppNavGraph(navController, paddingModifier) { role -> currentRole = role }
+        }
+    } else {
+        AppNavGraph(navController, modifier) { role -> currentRole = role }
+    }
+}
+
+@Composable
+private fun AppNavGraph(
+    navController: androidx.navigation.NavHostController,
+    modifier: Modifier,
+    onRoleResolved: (String) -> Unit
+) {
     NavHost(
         navController = navController,
         startDestination = Routes.LOGIN,
         modifier = modifier
     ) {
-        composable(Routes.VESSEL_SETUP) {
-            VesselSetupScreen(
-                onVesselSaved = {
-                    navController.navigate(Routes.LOGIN)
-                }
-            )
-        }
+        composable(Routes.VESSEL_SETUP) { /* mevcut hali */ }
 
         composable(Routes.LOGIN) {
             LoginScreen(
                 onLoginSuccess = { crewId, role ->
+                    onRoleResolved(role)
                     navController.navigate(Routes.homeWith(crewId, role)) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
@@ -58,9 +98,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         }
 
         composable(Routes.MANAGE_GROUPS) {
-            ManageGroupsScreen(
-                onBack = { navController.popBackStack() }
-            )
+            ManageGroupsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.JOURNAL) {
@@ -72,31 +110,11 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             arguments = listOf(
                 navArgument("crewId") { type = NavType.LongType },
                 navArgument("role") { type = NavType.StringType }
-
             )
-        )   { backStackEntry ->
-        val crewId = backStackEntry.arguments?.getLong("crewId") ?: 0L
-        val role = backStackEntry.arguments?.getString("role") ?: "OILER"
-        val canEdit = role == "ENGINEER" || role == "CHIEF"
-
-        AppScaffold(
-            title = "Engine Log",
-            canEditForm = canEdit,
-            onJournal = { navController.navigate(Routes.JOURNAL) },
-            onManageGroups = { navController.navigate(Routes.MANAGE_GROUPS) },
-            onSignOut = {
-                navController.navigate(Routes.LOGIN) {
-                    popUpTo(0) { inclusive = true }
-                }
-            }
-        ) { paddingModifier ->
-            LogEntryScreen(
-                crewId = crewId,
-                role = role,
-                modifier = paddingModifier
-            )
+        ) { backStackEntry ->
+            val crewId = backStackEntry.arguments?.getLong("crewId") ?: 0L
+            val role = backStackEntry.arguments?.getString("role") ?: "OILER"
+            LogEntryScreen(crewId = crewId, role = role)
         }
-    }
-
     }
 }
