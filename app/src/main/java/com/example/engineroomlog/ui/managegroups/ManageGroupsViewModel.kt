@@ -66,6 +66,20 @@ class ManageGroupsViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
+    fun moveParameterUp(groupParams: List<ParameterEntity>, index: Int) {
+        if (index <= 0) return
+        viewModelScope.launch {
+            paramDao.swapDisplayOrder(groupParams[index], groupParams[index - 1])
+        }
+    }
+
+    fun moveParameterDown(groupParams: List<ParameterEntity>, index: Int) {
+        if (index >= groupParams.lastIndex) return
+        viewModelScope.launch {
+            paramDao.swapDisplayOrder(groupParams[index], groupParams[index + 1])
+        }
+    }
+
     fun updateParameter(
         parameter: ParameterEntity,
         newName: String,

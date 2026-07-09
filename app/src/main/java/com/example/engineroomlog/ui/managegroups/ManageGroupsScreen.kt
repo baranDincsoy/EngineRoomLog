@@ -8,9 +8,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -80,10 +83,10 @@ fun ManageGroupsScreen(
                 }
             }
 
-            items(
+            itemsIndexed(
                 items = gwp.parameters,
-                key = { "param_${it.id}" }
-            ) { parameter ->
+                key = { _, param -> "param_${param.id}" }
+            ) { index, parameter ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -94,12 +97,16 @@ fun ManageGroupsScreen(
                         text = parameter.name,
                         modifier = Modifier.weight(1f)
                     )
-                    TextButton(onClick = { moveTarget = parameter }) {
-                        Text("Move")
-                    }
-                    TextButton(onClick = { editTarget = parameter }) {
-                        Text("Edit")
-                    }
+                    IconButton(
+                        onClick = { viewModel.moveParameterUp(gwp.parameters, index) },
+                        enabled = index > 0
+                    ) { Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Move up") }
+                    IconButton(
+                        onClick = { viewModel.moveParameterDown(gwp.parameters, index) },
+                        enabled = index < gwp.parameters.lastIndex
+                    ) { Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Move down") }
+                    TextButton(onClick = { editTarget = parameter }) { Text("Edit") }
+                    TextButton(onClick = { moveTarget = parameter }) { Text("Move") }
                 }
             }
         }

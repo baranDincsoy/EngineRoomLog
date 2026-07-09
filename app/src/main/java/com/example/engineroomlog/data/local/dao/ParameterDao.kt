@@ -3,6 +3,7 @@ package com.example.engineroomlog.data.local.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.example.engineroomlog.data.local.entity.ParameterEntity
 import kotlinx.coroutines.flow.Flow
@@ -26,5 +27,13 @@ interface ParameterDao {
 
     @Query("SELECT MAX(displayOrder) FROM parameters WHERE groupId = :groupId")
     suspend fun getMaxDisplayOrder(groupId: Long): Int?
+
+    // Swap display order of two parameters atomically
+    @Transaction
+    suspend fun swapDisplayOrder(a: ParameterEntity, b: ParameterEntity) {
+        update(a.copy(displayOrder = b.displayOrder))
+        update(b.copy(displayOrder = a.displayOrder))
+    }
+
 
 }
