@@ -61,7 +61,7 @@ fun ManageGroupsScreen(
             TextButton(onClick = onBack) { Text("< Back") }
         }
 
-        groups.forEach { gwp ->
+        groups.forEachIndexed { groupIndex, gwp ->
             item(key = "group_${gwp.group.id}") {
                 Row(
                     modifier = Modifier
@@ -74,6 +74,18 @@ fun ManageGroupsScreen(
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.weight(1f)
                     )
+                    IconButton(
+                        onClick = { viewModel.moveGroupUp(gwp.group) },
+                        enabled = groupIndex > 0                    // top group cannot move up
+                    ) {
+                        Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Move group up")
+                    }
+                    IconButton(
+                        onClick = { viewModel.moveGroupDown(gwp.group) },
+                        enabled = groupIndex < groups.lastIndex     // bottom group cannot move down
+                    ) {
+                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Move group down")
+                    }
                     IconButton(onClick = { renameTarget = gwp.group }) {
                         Icon(Icons.Default.Edit, contentDescription = "Rename group")
                     }
@@ -111,7 +123,6 @@ fun ManageGroupsScreen(
             }
         }
     }
-
     // --- Rename dialog ---
     renameTarget?.let { group ->
         var newName by remember(group.id) { mutableStateOf(group.name) }

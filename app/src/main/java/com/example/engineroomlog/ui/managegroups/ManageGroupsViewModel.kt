@@ -80,6 +80,30 @@ class ManageGroupsViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
+    fun moveGroupUp(group: ParameterGroupEntity) = moveGroup(group, -1)
+    fun moveGroupDown(group: ParameterGroupEntity) = moveGroup(group, +1)
+
+    private fun moveGroup(group: ParameterGroupEntity, direction: Int) {
+        viewModelScope.launch {
+            // Take a snapshot of groups in their current visual order
+            val sorted = groups.value
+                .map { it.group }          // GroupWithParameters -> entity; adjust to your type
+                .sortedBy { it.displayOrder }
+
+            val index = sorted.indexOfFirst { it.id == group.id }
+            val neighborIndex = index + direction
+
+            // Guard: item not found, or already at top/bottom -> do nothing
+            if (index == -1 || neighborIndex !in sorted.indices) return@launch
+
+            val neighbor = sorted[neighborIndex]
+
+            // Swap displayOrder values; Flow will re-emit the new order
+            groupDao.update(group.copy(displayOrder = neighbor.displayOrder))
+            groupDao.update(neighbor.copy(displayOrder = group.displayOrder))
+        }
+    }
+
     fun updateParameter(
         parameter: ParameterEntity,
         newName: String,

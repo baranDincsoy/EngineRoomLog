@@ -18,6 +18,7 @@ interface ParameterGroupDao {
     @Update
     suspend fun update(group: ParameterGroupEntity)
 
+
     @Query(
         "SELECT * FROM parameter_groups " +
                 "WHERE vesselProfileId = :vesselId AND isActive = 1 " +
