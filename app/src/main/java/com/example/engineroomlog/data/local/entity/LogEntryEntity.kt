@@ -37,5 +37,6 @@ data class LogEntryEntity(
     val postedByCrewId: Long?,
     val postedAt: Long?,
     val remarks: String?,
-    val isArchived: Boolean = false
+    val isArchived: Boolean = false,
+    val watch: String?,   // nullable: UMS ships leave this empty
 )

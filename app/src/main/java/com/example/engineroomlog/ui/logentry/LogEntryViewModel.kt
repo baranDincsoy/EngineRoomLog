@@ -113,7 +113,7 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
         groupId: Long,
         name: String,
         unit: String?,
-        state: OperationalState
+        state: OperationalState,
     ) {
         val trimmedName = name.trim()
         if (trimmedName.isEmpty()) return
@@ -162,7 +162,9 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
                 postedByName = null,
                 postedByCrewId = null,
                 postedAt = null,
-                remarks = null
+                remarks = null,
+                isArchived = false,
+                watch = null
             )
 
             val readings = drafts.map { (parameterId, value) ->

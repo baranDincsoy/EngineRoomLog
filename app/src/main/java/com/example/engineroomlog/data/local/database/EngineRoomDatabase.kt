@@ -26,7 +26,7 @@ import com.example.engineroomlog.data.local.entity.VesselProfileEntity
         LogEntryEntity::class,
         ReadingEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
