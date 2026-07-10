@@ -138,6 +138,9 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
             it.copy(draftValues = it.draftValues + (parameterId to value))
         }
     }
+    fun onRemarksChange(text: String) {
+        _uiState.update { it.copy(draftRemarks = text) }
+    }
 
     fun saveEntry() {
         val drafts = _uiState.value.draftValues.filterValues { it.isNotBlank() }
@@ -152,7 +155,7 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             val entry = LogEntryEntity(
 
-                vesselProfileId = 1,
+                vesselProfileId = activeVesselId,
                 timestamp = System.currentTimeMillis(),
                 state = _uiState.value.selectedState,      // TODO: sea/port toggle later
                 status = EntryStatus.COLLECTING,
@@ -162,9 +165,10 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
                 postedByName = null,
                 postedByCrewId = null,
                 postedAt = null,
-                remarks = null,
+                remarks = _uiState.value.draftRemarks.trim().ifEmpty { null },
                 isArchived = false,
-                watch = null
+                watch = null,
+
             )
 
             val readings = drafts.map { (parameterId, value) ->
@@ -178,7 +182,12 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
             val entryId = logEntryDao.insertEntryWithReadings(entry, readings, readingDao)
 
             _uiState.update {
-                it.copy(isSaving = false, savedEntryId = entryId, draftValues = emptyMap())
+                it.copy(
+                    isSaving = false,
+                    draftValues = emptyMap(),
+                    draftRemarks = "",
+                    savedEntryId = entry.id
+                )
             }
         }
     }

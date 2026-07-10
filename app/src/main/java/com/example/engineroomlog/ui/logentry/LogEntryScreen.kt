@@ -52,7 +52,8 @@ fun LogEntryScreen(
     var showSaveConfirm by remember { mutableStateOf(false) }
 
     var showExitWarning by remember { mutableStateOf(false) }
-    val hasUnsavedValues = uiState.draftValues.any { it.value.isNotBlank() }
+    val hasUnsavedValues = uiState.draftValues.any { it.value.isNotBlank() } ||
+            uiState.draftRemarks.isNotBlank()
 
     BackHandler(enabled = hasUnsavedValues) {
         showExitWarning = true
@@ -126,6 +127,19 @@ fun LogEntryScreen(
                 ) { Text("+ Add parameter") }
             }
 
+        }
+
+        item(key = "remarks") {
+            OutlinedTextField(
+                value = uiState.draftRemarks,
+                onValueChange = { viewModel.onRemarksChange(it) },
+                label = { Text("Remarks (optional)") },
+                minLines = 2,
+                maxLines = 4,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+            )
         }
 
         // --- Save button: once, AFTER the groups ---
