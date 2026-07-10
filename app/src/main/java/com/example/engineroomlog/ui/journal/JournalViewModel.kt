@@ -63,6 +63,8 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
                             entryId = ewr.entry.id,
                             timestamp = ewr.entry.timestamp,
                             collectedByName = ewr.entry.collectedByName,
+                            collectedByCrewId = ewr.entry.collectedByCrewId,
+                            remarks = ewr.entry.remarks,
                             values = ewr.readings.associate { it.parameterId to it.value }
                         )
                     }

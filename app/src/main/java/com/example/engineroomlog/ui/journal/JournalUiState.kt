@@ -7,6 +7,8 @@ data class JournalRow(
     val entryId: Long,
     val timestamp: Long,
     val collectedByName: String,
+    val collectedByCrewId: Long?,
+    val remarks: String?,
     val values: Map<Long, String>
 )
 
