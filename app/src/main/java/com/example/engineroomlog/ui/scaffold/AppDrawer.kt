@@ -27,7 +27,9 @@ import kotlinx.coroutines.launch
 fun AppScaffold(
     title: String,
     canEditForm: Boolean,
+    canManageCrew: Boolean,   // CHIEF only
     onManageGroups: () -> Unit,
+    onManageCrew: () -> Unit,
     onSignOut: () -> Unit,
     onJournal: () -> Unit,
     onEntry: () -> Unit,
@@ -73,6 +75,18 @@ fun AppScaffold(
                         onClick = {
                             scope.launch { drawerState.close() }
                             onManageGroups()
+                        }
+                    )
+                }
+
+                if (canManageCrew) {
+                    NavigationDrawerItem(
+                        label = { Text("Manage crew") },
+                        icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                        selected = false,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            onManageCrew()
                         }
                     )
                 }

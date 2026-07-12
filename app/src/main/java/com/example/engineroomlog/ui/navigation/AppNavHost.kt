@@ -27,6 +27,7 @@ object Routes {
     const val HOME = "home/{crewId}/{role}"
     const val MANAGE_GROUPS = "manage_groups"
     const val JOURNAL = "journal/{crewId}/{role}"
+    const val MANAGE_CREW = "manage_crew"
 
 
 
@@ -48,6 +49,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     // Role travels with the HOME route args; remember it after login
     var currentRole by rememberSaveable { mutableStateOf("OILER") }
     val canEdit = currentRole == "ENGINEER" || currentRole == "CHIEF"
+    val canManageCrew = currentRole == "CHIEF"
 
     val isLoggedInArea = currentRoute != null &&
             currentRoute != Routes.LOGIN &&
@@ -58,11 +60,14 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             title = when (currentRoute) {
                 Routes.JOURNAL -> "Journal"
                 Routes.MANAGE_GROUPS -> "Manage groups"
+                Routes.MANAGE_CREW -> "Manage crew"
                 else -> "Engine Log"
             },
             canEditForm = canEdit,
-            onJournal = { navController.navigate(Routes.journalWith(currentCrewId, currentRole)) },
+            canManageCrew = canManageCrew,
             onManageGroups = { navController.navigate(Routes.MANAGE_GROUPS) },
+            onManageCrew = { navController.navigate(Routes.MANAGE_CREW) },
+            onJournal = { navController.navigate(Routes.journalWith(currentCrewId, currentRole)) },
             onEntry = { navController.popBackStack(Routes.HOME, inclusive = false) },
             onSignOut = {
                 navController.navigate(Routes.LOGIN) {
@@ -90,6 +95,10 @@ private fun AppNavGraph(
         modifier = modifier
     ) {
         composable(Routes.VESSEL_SETUP) { /* mevcut hali */ }
+
+        composable(Routes.MANAGE_CREW) {
+            Text("Manage crew — coming next")   // placeholder until ManageCrewScreen exists
+        }
 
         composable(Routes.LOGIN) {
             LoginScreen(
