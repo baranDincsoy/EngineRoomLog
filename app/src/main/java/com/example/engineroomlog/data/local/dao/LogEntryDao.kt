@@ -8,10 +8,12 @@ import androidx.room.Update
 import com.example.engineroomlog.data.local.entity.LogEntryEntity
 import com.example.engineroomlog.data.local.entity.LogEntryWithReadings
 import com.example.engineroomlog.data.local.entity.ReadingEntity
+import com.example.engineroomlog.data.local.model.EntryStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LogEntryDao {
+
 
     @Insert
     suspend fun insert(logEntry: LogEntryEntity): Long
@@ -66,5 +68,12 @@ interface LogEntryDao {
         startMillis: Long,
         endMillis: Long
     ): Flow<List<LogEntryWithReadings>>
+
+    @Query(
+        "UPDATE log_entries SET status = :status, postedByName = :name, " +
+                "postedByCrewId = :crewId, postedAt = :at WHERE id = :entryId"
+    )
+    suspend fun postEntry(entryId: Long, status: EntryStatus, name: String, crewId: Long?, at: Long)
+
 
 }

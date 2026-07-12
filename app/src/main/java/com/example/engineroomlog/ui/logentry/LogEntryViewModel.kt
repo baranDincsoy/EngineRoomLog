@@ -157,8 +157,8 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
 
                 vesselProfileId = activeVesselId,
                 timestamp = System.currentTimeMillis(),
-                state = _uiState.value.selectedState,      // TODO: sea/port toggle later
-                status = EntryStatus.COLLECTING,
+                state = _uiState.value.selectedState,
+                status = EntryStatus.SUBMITTED,
                 collectedByName = activeCrew?.name ?: "Unknown",
                 collectedByCrewId = activeCrew?.id,
                 collectedAt = System.currentTimeMillis(),
@@ -186,7 +186,7 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
                     isSaving = false,
                     draftValues = emptyMap(),
                     draftRemarks = "",
-                    savedEntryId = entry.id
+                    savedEntryId = entryId
                 )
             }
         }

@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.engineroomlog.data.local.database.DatabaseProvider
+import com.example.engineroomlog.data.local.entity.CrewMemberEntity
+import com.example.engineroomlog.data.local.model.EntryStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -65,16 +67,38 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
                             collectedByName = ewr.entry.collectedByName,
                             collectedByCrewId = ewr.entry.collectedByCrewId,
                             remarks = ewr.entry.remarks,
+                            status = ewr.entry.status,
+                            postedByName = ewr.entry.postedByName,
+                            postedAt = ewr.entry.postedAt,
                             values = ewr.readings.associate { it.parameterId to it.value }
                         )
                     }
+
                 )
             }.collect { state ->
                 _uiState.value = state
             }
         }
     }
+    private var activeCrew: CrewMemberEntity? = null
 
+    fun setActiveCrew(crewId: Long) {
+        viewModelScope.launch {
+            activeCrew = db.crewMemberDao().getById(crewId)
+        }
+    }
+
+    fun postEntry(row: JournalRow) {
+        viewModelScope.launch {
+            logEntryDao.postEntry(
+                entryId = row.entryId,
+                status = EntryStatus.POSTED,
+                name = activeCrew?.name ?: "Unknown",
+                crewId = activeCrew?.id,
+                at = System.currentTimeMillis()
+            )
+        }
+    }
     fun goToPreviousDay() {
         dayStart.update { it - 24L * 60 * 60 * 1000 }
     }

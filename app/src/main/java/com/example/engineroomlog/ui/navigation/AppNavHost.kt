@@ -26,9 +26,11 @@ object Routes {
     const val LOGIN = "login"
     const val HOME = "home/{crewId}/{role}"
     const val MANAGE_GROUPS = "manage_groups"
-    const val JOURNAL = "journal"
+    const val JOURNAL = "journal/{crewId}/{role}"
 
 
+
+    fun journalWith(crewId: Long, role: String) = "journal/$crewId/$role"
     fun homeWith(crewId: Long, role: String) = "home/$crewId/$role"
 
 }
@@ -36,6 +38,8 @@ object Routes {
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
+
+    var currentCrewId by rememberSaveable { mutableStateOf(0L) }
 
     // Which route is on screen right now?
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -57,7 +61,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 else -> "Engine Log"
             },
             canEditForm = canEdit,
-            onJournal = { navController.navigate(Routes.JOURNAL) },
+            onJournal = { navController.navigate(Routes.journalWith(currentCrewId, currentRole)) },
             onManageGroups = { navController.navigate(Routes.MANAGE_GROUPS) },
             onEntry = { navController.popBackStack(Routes.HOME, inclusive = false) },
             onSignOut = {
@@ -66,10 +70,10 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 }
             }
         ) { paddingModifier ->
-            AppNavGraph(navController, paddingModifier) { role -> currentRole = role }
+            AppNavGraph(navController, paddingModifier) { crewId, role -> currentCrewId = crewId; currentRole = role }
         }
     } else {
-        AppNavGraph(navController, modifier) { role -> currentRole = role }
+        AppNavGraph(navController, modifier) { crewId, role -> currentCrewId = crewId; currentRole = role }
     }
 }
 
@@ -77,7 +81,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 private fun AppNavGraph(
     navController: androidx.navigation.NavHostController,
     modifier: Modifier,
-    onRoleResolved: (String) -> Unit,
+    onLoginResolved: (Long, String) -> Unit,
 
 ) {
     NavHost(
@@ -90,7 +94,7 @@ private fun AppNavGraph(
         composable(Routes.LOGIN) {
             LoginScreen(
                 onLoginSuccess = { crewId, role ->
-                    onRoleResolved(role)
+                    onLoginResolved(crewId, role)
                     navController.navigate(Routes.homeWith(crewId, role)) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
@@ -102,8 +106,17 @@ private fun AppNavGraph(
             ManageGroupsScreen(onBack = { navController.popBackStack() })
         }
 
-        composable(Routes.JOURNAL) {
-            JournalScreen()
+        composable(
+            route = Routes.JOURNAL,
+            arguments = listOf(
+                navArgument("crewId") { type = NavType.LongType },
+                navArgument("role") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            JournalScreen(
+                crewId = backStackEntry.arguments?.getLong("crewId") ?: 0L,
+                role = backStackEntry.arguments?.getString("role") ?: "OILER"
+            )
         }
 
         composable(

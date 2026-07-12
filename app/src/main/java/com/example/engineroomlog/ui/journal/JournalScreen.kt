@@ -26,19 +26,28 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.example.engineroomlog.data.local.model.EntryStatus
 
 private val TIME_COL_WIDTH = 72.dp
 private val VALUE_COL_WIDTH = 84.dp
 
 @Composable
 fun JournalScreen(
+    crewId: Long,
+    role: String,
     modifier: Modifier = Modifier,
     viewModel: JournalViewModel = viewModel()
 ) {
+    val canPost = role == "ENGINEER" || role == "CHIEF"
+
+    LaunchedEffect(crewId) { viewModel.setActiveCrew(crewId) }
+
     val uiState by viewModel.uiState.collectAsState()
 
     // ONE horizontal scroll state shared by header and every row
@@ -138,6 +147,17 @@ fun JournalScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(top = 8.dp)
                     )
+                    if (row.status == EntryStatus.POSTED) {
+                        Text(
+                            text = "Posted by: ${row.postedByName ?: "—"}" +
+                                    (row.postedAt?.let {
+                                        ", " + SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+                                            .format(Date(it))
+                                    } ?: ""),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                     // Readings: only filled values, name = value unit
                     flatParams
                         .filter { row.values.containsKey(it.id) }
@@ -149,9 +169,16 @@ fun JournalScreen(
                                 modifier = Modifier.padding(top = 4.dp)
                             )
                         }
+
                 }
             },
             confirmButton = {
+                if (canPost && row.status == EntryStatus.COLLECTING) {
+                    Button(onClick = {
+                        viewModel.postEntry(row)
+                        detailRow = null   // close: the snapshot is stale after posting
+                    }) { Text("Post entry") }
+                }
                 TextButton(onClick = { detailRow = null }) { Text("Close") }
             }
         )
