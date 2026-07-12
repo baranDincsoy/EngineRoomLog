@@ -16,6 +16,7 @@ import androidx.navigation.navArgument
 import com.example.engineroomlog.ui.journal.JournalScreen
 import com.example.engineroomlog.ui.logentry.LogEntryScreen
 import com.example.engineroomlog.ui.login.LoginScreen
+import com.example.engineroomlog.ui.managecrew.ManageCrewScreen
 import com.example.engineroomlog.ui.managegroups.ManageGroupsScreen
 import com.example.engineroomlog.ui.scaffold.AppScaffold
 import com.example.engineroomlog.ui.vesselsetup.VesselSetupScreen
@@ -75,10 +76,10 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 }
             }
         ) { paddingModifier ->
-            AppNavGraph(navController, paddingModifier) { crewId, role -> currentCrewId = crewId; currentRole = role }
+            AppNavGraph(navController, paddingModifier, currentCrewId) { crewId, role -> currentCrewId = crewId; currentRole = role }
         }
     } else {
-        AppNavGraph(navController, modifier) { crewId, role -> currentCrewId = crewId; currentRole = role }
+        AppNavGraph(navController, modifier, currentCrewId) { crewId, role -> currentCrewId = crewId; currentRole = role }
     }
 }
 
@@ -86,6 +87,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 private fun AppNavGraph(
     navController: androidx.navigation.NavHostController,
     modifier: Modifier,
+    currentCrewId : Long,
     onLoginResolved: (Long, String) -> Unit,
 
 ) {
@@ -97,7 +99,10 @@ private fun AppNavGraph(
         composable(Routes.VESSEL_SETUP) { /* mevcut hali */ }
 
         composable(Routes.MANAGE_CREW) {
-            Text("Manage crew — coming next")   // placeholder until ManageCrewScreen exists
+            ManageCrewScreen(
+                activeCrewId = currentCrewId,
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable(Routes.LOGIN) {

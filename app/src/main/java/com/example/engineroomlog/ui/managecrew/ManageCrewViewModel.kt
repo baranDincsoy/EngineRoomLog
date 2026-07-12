@@ -1,0 +1,82 @@
+package com.example.engineroomlog.ui.managecrew
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.engineroomlog.core.security.PasswordHasher
+import com.example.engineroomlog.data.local.database.DatabaseProvider
+import com.example.engineroomlog.data.local.entity.CrewMemberEntity
+import com.example.engineroomlog.data.local.model.CrewRole
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+
+class ManageCrewViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val db = DatabaseProvider.getDatabase(application)
+    private val crewDao = db.crewMemberDao()
+
+    private var activeVesselId: Long = 1L
+
+    private val _crew = MutableStateFlow<List<CrewMemberEntity>>(emptyList())
+    val crew: StateFlow<List<CrewMemberEntity>> = _crew.asStateFlow()
+
+    // Set by the screen so the chief cannot deactivate their own account
+    var activeCrewId: Long = 0L
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            val vessel = db.vesselProfileDao().getActiveVessels().first().firstOrNull()
+            if (vessel != null) activeVesselId = vessel.id
+
+            crewDao.getActiveCrew(activeVesselId).collect { list ->
+                _crew.value = list
+            }
+        }
+    }
+
+    fun addCrewMember(
+        name: String,
+        rank: String,
+        employeeNo: String,
+        password: String,
+        role: CrewRole
+    ) {
+        val trimmedName = name.trim()
+        val trimmedNo = employeeNo.trim()
+        if (trimmedName.isEmpty() || trimmedNo.isEmpty() || password.isEmpty()) return
+
+        viewModelScope.launch {
+            // Employee numbers are unique across the app; reject duplicates up front
+            if (crewDao.findByUsername(trimmedNo) != null) {
+                _errorMessage.value = "Employee no $trimmedNo is already in use"
+                return@launch
+            }
+            crewDao.insert(
+                CrewMemberEntity(
+                    vesselProfileId = activeVesselId,
+                    name = trimmedName,
+                    rank = rank.trim().ifEmpty { null },
+                    role = role,
+                    username = trimmedNo,
+                    passwordHash = PasswordHasher.hash(password)
+                )
+            )
+            _errorMessage.value = null
+        }
+    }
+
+    fun deactivate(member: CrewMemberEntity) {
+        if (member.id == activeCrewId) return   // safety net; UI hides the button too
+        viewModelScope.launch {
+            crewDao.update(member.copy(isActive = false))
+        }
+    }
+
+    fun clearError() { _errorMessage.value = null }
+}
