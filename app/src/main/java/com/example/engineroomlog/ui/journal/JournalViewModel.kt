@@ -14,6 +14,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import com.example.engineroomlog.core.pdf.JournalPdfExporter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class JournalViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -22,6 +25,8 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
     private val logEntryDao = db.logEntryDao()
 
     private var activeVesselId: Long = 1L
+
+    private var activeVesselName: String = ""
 
     private val _uiState = MutableStateFlow(JournalUiState())
     val uiState: StateFlow<JournalUiState> = _uiState.asStateFlow()
@@ -32,12 +37,16 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
     init {
         viewModelScope.launch {
             val vessel = db.vesselProfileDao().getActiveVessels().first().firstOrNull()
-            if (vessel != null) activeVesselId = vessel.id
+            if (vessel != null) {
+                activeVesselId = vessel.id
+                activeVesselName = vessel.name
+            }
 
             dayStart.collect { start ->
                 observeDay(start)
             }
         }
+
     }
 
     private var dayJob: kotlinx.coroutines.Job? = null
@@ -53,6 +62,8 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
             ) { groups, entries ->
                 JournalUiState(
                     dayStartMillis = startMillis,
+                    dayExported = JournalPdfExporter
+                        .fileFor(getApplication(), startMillis).exists(),
                     groups = groups.map { gwp ->
                         gwp.copy(
                             parameters = gwp.parameters
@@ -88,6 +99,23 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun exportDay() {
+        viewModelScope.launch {
+            val state = _uiState.value
+            if (state.rows.isEmpty()) return@launch
+
+            // PDF writing is disk I/O — keep it off the main thread
+            withContext(Dispatchers.IO) {
+                JournalPdfExporter(getApplication()).export(
+                    dayStartMillis = state.dayStartMillis,
+                    vesselName = activeVesselName,
+                    parameters = state.groups.flatMap { it.parameters },
+                    rows = state.rows
+                )
+            }
+            _uiState.update { it.copy(dayExported = true) }
+        }
+    }
     fun postEntry(row: JournalRow) {
         viewModelScope.launch {
             logEntryDao.postEntry(

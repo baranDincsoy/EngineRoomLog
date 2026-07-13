@@ -19,5 +19,6 @@ data class JournalRow(
 data class JournalUiState(
     val dayStartMillis: Long = 0L,
     val groups: List<GroupWithParameters> = emptyList(),
-    val rows: List<JournalRow> = emptyList()
+    val rows: List<JournalRow> = emptyList(),
+    val dayExported: Boolean = false,
 )

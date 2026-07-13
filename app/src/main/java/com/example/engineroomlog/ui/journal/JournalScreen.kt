@@ -101,7 +101,7 @@ fun JournalScreen(
         }
 
         // Data rows
-        LazyColumn {
+        LazyColumn(  modifier = Modifier.weight(1f),) {
             items(
                 items = uiState.rows,
                 key = { "row_${it.entryId}" }
@@ -123,6 +123,15 @@ fun JournalScreen(
                     }
                 }
             }
+        }
+        Button(
+            onClick = { viewModel.exportDay() },
+            enabled = !uiState.dayExported && uiState.rows.isNotEmpty(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(if (uiState.dayExported) "Exported ✓" else "Export day (PDF)")
         }
     }
     detailRow?.let { row ->
@@ -169,7 +178,6 @@ fun JournalScreen(
                                 modifier = Modifier.padding(top = 4.dp)
                             )
                         }
-
                 }
             },
             confirmButton = {
