@@ -18,6 +18,7 @@ import com.example.engineroomlog.ui.logentry.LogEntryScreen
 import com.example.engineroomlog.ui.login.LoginScreen
 import com.example.engineroomlog.ui.managecrew.ManageCrewScreen
 import com.example.engineroomlog.ui.managegroups.ManageGroupsScreen
+import com.example.engineroomlog.ui.pdflist.PdfListScreen
 import com.example.engineroomlog.ui.scaffold.AppScaffold
 import com.example.engineroomlog.ui.vesselsetup.VesselSetupScreen
 
@@ -29,13 +30,12 @@ object Routes {
     const val MANAGE_GROUPS = "manage_groups"
     const val JOURNAL = "journal/{crewId}/{role}"
     const val MANAGE_CREW = "manage_crew"
-
-
-
+    const val PDF_LIST = "pdf_list"
     fun journalWith(crewId: Long, role: String) = "journal/$crewId/$role"
     fun homeWith(crewId: Long, role: String) = "home/$crewId/$role"
-
 }
+
+
 
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
@@ -69,6 +69,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             onManageGroups = { navController.navigate(Routes.MANAGE_GROUPS) },
             onManageCrew = { navController.navigate(Routes.MANAGE_CREW) },
             onJournal = { navController.navigate(Routes.journalWith(currentCrewId, currentRole)) },
+            onPdfList = { navController.navigate(Routes.PDF_LIST) },
             onEntry = { navController.popBackStack(Routes.HOME, inclusive = false) },
             onSignOut = {
                 navController.navigate(Routes.LOGIN) {
@@ -131,6 +132,10 @@ private fun AppNavGraph(
                 crewId = backStackEntry.arguments?.getLong("crewId") ?: 0L,
                 role = backStackEntry.arguments?.getString("role") ?: "OILER"
             )
+        }
+
+        composable(Routes.PDF_LIST) {
+            PdfListScreen(onBack = { navController.popBackStack() })
         }
 
         composable(

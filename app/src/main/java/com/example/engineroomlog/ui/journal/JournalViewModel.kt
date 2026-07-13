@@ -109,7 +109,7 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
                 JournalPdfExporter(getApplication()).export(
                     dayStartMillis = state.dayStartMillis,
                     vesselName = activeVesselName,
-                    parameters = state.groups.flatMap { it.parameters },
+                    parameters = state.groups.flatMap { gwp -> gwp.parameters.map { p -> gwp.group.name to p } },
                     rows = state.rows
                 )
             }

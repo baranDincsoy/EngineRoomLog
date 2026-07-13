@@ -32,6 +32,7 @@ fun AppScaffold(
     onManageCrew: () -> Unit,
     onSignOut: () -> Unit,
     onJournal: () -> Unit,
+    onPdfList: () -> Unit,
     onEntry: () -> Unit,
     content: @Composable (Modifier) -> Unit
 ) {
@@ -64,6 +65,16 @@ fun AppScaffold(
                     onClick = {
                         scope.launch { drawerState.close() }
                         onJournal()
+                    }
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("PDF list") },
+                    icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onPdfList()
                     }
                 )
 

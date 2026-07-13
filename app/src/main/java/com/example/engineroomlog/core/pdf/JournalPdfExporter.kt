@@ -39,9 +39,10 @@ class JournalPdfExporter(private val context: Context) {
     fun export(
         dayStartMillis: Long,
         vesselName: String,
-        parameters: List<ParameterEntity>,
+        parameters: List<Pair<String, ParameterEntity>>,   // group name + parameter
         rows: List<JournalRow>
     ): File {
+
         val doc = PdfDocument()
         val dateLabel = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date(dayStartMillis))
         val timeFmt = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -49,10 +50,14 @@ class JournalPdfExporter(private val context: Context) {
 
         val tableW = pageWidth - 2 * margin
         val timeColW = 50f
-        val minParamColW = 55f
+        val minParamColW = 90f
         val colsPerPage = ((tableW - timeColW) / minParamColW).toInt().coerceAtLeast(1)
         val paramChunks = if (parameters.isEmpty()) listOf(emptyList())
         else parameters.chunked(colsPerPage)
+
+        // A journal page is written once; never silently rewritten
+        val existing = fileFor(context, dayStartMillis)
+        if (existing.exists()) return existing
 
         var pageNo = 0
         fun newPage(): Pair<PdfDocument.Page, Canvas> {
@@ -72,6 +77,7 @@ class JournalPdfExporter(private val context: Context) {
         }
 
         // --- Value table: one page set per column chunk, rows paginate downward ---
+// --- Value table: one page set per column chunk, rows paginate downward ---
         for (chunk in paramChunks) {
             val paramColW = if (chunk.isEmpty()) 0f else (tableW - timeColW) / chunk.size
             var rowIndex = 0
@@ -79,24 +85,51 @@ class JournalPdfExporter(private val context: Context) {
                 val (page, c) = newPage()
                 var y = margin + 30f
 
-                var x = margin
-                c.drawText("Time", x + 2f, y, headerPaint)
-                x += timeColW
-                chunk.forEach { p ->
-                    val label = p.name + (p.unit?.let { " ($it)" } ?: "")
-                    c.drawText(label.take(14), x + 2f, y, headerPaint)
+                // Header: measured two-line labels, no truncation
+// Group band above the column headers: label only on the group's first column
+                var x = margin + timeColW
+                var prevGroup: String? = null
+                chunk.forEach { (groupName, _) ->
+                    if (groupName != prevGroup) {
+                        c.drawText(groupName, x + 2f, y, headerPaint)
+                        prevGroup = groupName
+                    }
                     x += paramColW
                 }
-                y += 6f
+                y += 12f
+
+                x = margin
+                c.drawText("Time", x + 2f, y, headerPaint)
+                x += timeColW
+                chunk.forEach { (_, p) ->
+                    val label = p.name + (p.unit?.let { " ($it)" } ?: "")
+                    val avail = paramColW - 4f
+                    if (headerPaint.measureText(label) <= avail) {
+                        c.drawText(label, x + 2f, y, headerPaint)
+                    } else {
+                        val cut = headerPaint.breakText(p.name, true, avail, null)
+                        val line1 = p.name.take(cut)
+                        val line2 = (p.name.drop(cut) + (p.unit?.let { " ($it)" } ?: "")).trim()
+                        c.drawText(line1, x + 2f, y, headerPaint)
+                        c.drawText(
+                            if (headerPaint.measureText(line2) <= avail) line2
+                            else line2.take(headerPaint.breakText(line2, true, avail, null)),
+                            x + 2f, y + 10f, headerPaint
+                        )
+                    }
+                    x += paramColW
+                }
+                y += 16f
                 c.drawLine(margin, y, margin + tableW, y, linePaint)
                 y += rowH
 
+                // Data rows: time + one value cell per parameter
                 while (rowIndex < rows.size && y < pageHeight - margin) {
                     val row = rows[rowIndex]
                     var cx = margin
                     c.drawText(timeFmt.format(Date(row.timestamp)), cx + 2f, y, cellPaint)
                     cx += timeColW
-                    chunk.forEach { p ->
+                    chunk.forEach { (_, p) ->
                         c.drawText(row.values[p.id] ?: "—", cx + 2f, y, cellPaint)
                         cx += paramColW
                     }
@@ -140,6 +173,7 @@ class JournalPdfExporter(private val context: Context) {
         file.parentFile?.mkdirs()
         file.outputStream().use { doc.writeTo(it) }
         doc.close()
+        file.setReadOnly()
         return file
     }
 }
