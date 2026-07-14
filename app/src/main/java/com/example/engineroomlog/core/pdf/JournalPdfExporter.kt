@@ -78,6 +78,7 @@ class JournalPdfExporter(private val context: Context) {
 
         // --- Value table: one page set per column chunk, rows paginate downward ---
 // --- Value table: one page set per column chunk, rows paginate downward ---
+// --- Value table: one page set per column chunk, rows paginate downward ---
         for (chunk in paramChunks) {
             val paramColW = if (chunk.isEmpty()) 0f else (tableW - timeColW) / chunk.size
             var rowIndex = 0
@@ -85,8 +86,7 @@ class JournalPdfExporter(private val context: Context) {
                 val (page, c) = newPage()
                 var y = margin + 30f
 
-                // Header: measured two-line labels, no truncation
-// Group band above the column headers: label only on the group's first column
+                // Group band above the column headers
                 var x = margin + timeColW
                 var prevGroup: String? = null
                 chunk.forEach { (groupName, _) ->
@@ -98,6 +98,7 @@ class JournalPdfExporter(private val context: Context) {
                 }
                 y += 12f
 
+                // Column headers: measured, two lines when needed
                 x = margin
                 c.drawText("Time", x + 2f, y, headerPaint)
                 x += timeColW
@@ -121,9 +122,10 @@ class JournalPdfExporter(private val context: Context) {
                 }
                 y += 16f
                 c.drawLine(margin, y, margin + tableW, y, linePaint)
+                val gridTop = y
                 y += rowH
 
-                // Data rows: time + one value cell per parameter
+                // Data rows: time + one value cell per parameter, ruled line under each
                 while (rowIndex < rows.size && y < pageHeight - margin) {
                     val row = rows[rowIndex]
                     var cx = margin
@@ -133,9 +135,22 @@ class JournalPdfExporter(private val context: Context) {
                         c.drawText(row.values[p.id] ?: "—", cx + 2f, y, cellPaint)
                         cx += paramColW
                     }
+                    c.drawLine(margin, y + 5f, margin + tableW, y + 5f, linePaint)
                     y += rowH
                     rowIndex++
                 }
+
+                // Vertical grid lines, drawn once the page's rows are done
+                val gridBottom = y - rowH + 5f
+                var vx = margin
+                c.drawLine(vx, gridTop, vx, gridBottom, linePaint)
+                vx += timeColW
+                repeat(chunk.size) {
+                    c.drawLine(vx, gridTop, vx, gridBottom, linePaint)
+                    vx += paramColW
+                }
+                c.drawLine(vx, gridTop, vx, gridBottom, linePaint)
+
                 doc.finishPage(page)
             } while (rowIndex < rows.size)
         }

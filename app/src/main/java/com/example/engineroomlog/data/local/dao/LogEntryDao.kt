@@ -75,5 +75,14 @@ interface LogEntryDao {
     )
     suspend fun postEntry(entryId: Long, status: EntryStatus, name: String, crewId: Long?, at: Long)
 
-
+    // Timestamps since a cutoff — used by the PDF catch-up to find days that have entries
+    @Query(
+        "SELECT timestamp FROM log_entries " +
+                "WHERE vesselProfileId = :vesselId " +
+                "AND isArchived = 0 " +
+                "AND timestamp >= :sinceMillis"
+    )
+    suspend fun getTimestampsSince(vesselId: Long, sinceMillis: Long): List<Long>
 }
+
+

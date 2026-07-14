@@ -2,6 +2,7 @@ package com.example.engineroomlog.ui.navigation
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -13,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.engineroomlog.ui.chiefsetup.ChiefSetupScreen
 import com.example.engineroomlog.ui.journal.JournalScreen
 import com.example.engineroomlog.ui.logentry.LogEntryScreen
 import com.example.engineroomlog.ui.login.LoginScreen
@@ -21,6 +23,7 @@ import com.example.engineroomlog.ui.managegroups.ManageGroupsScreen
 import com.example.engineroomlog.ui.pdflist.PdfListScreen
 import com.example.engineroomlog.ui.scaffold.AppScaffold
 import com.example.engineroomlog.ui.vesselsetup.VesselSetupScreen
+import kotlinx.coroutines.flow.first
 
 // Route names live in one place so we never mistype them
 object Routes {
@@ -33,6 +36,10 @@ object Routes {
     const val PDF_LIST = "pdf_list"
     fun journalWith(crewId: Long, role: String) = "journal/$crewId/$role"
     fun homeWith(crewId: Long, role: String) = "home/$crewId/$role"
+
+    const val CHIEF_SETUP = "chief_setup/{vesselId}"
+    fun chiefSetupWith(vesselId: Long) = "chief_setup/$vesselId"
+
 }
 
 
@@ -40,6 +47,19 @@ object Routes {
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var startDestination by androidx.compose.runtime.remember {
+        androidx.compose.runtime.mutableStateOf<String?>(null)
+    }
+    LaunchedEffect(Unit) {
+        val hasVessel = com.example.engineroomlog.data.local.database.DatabaseProvider
+            .getDatabase(context)
+            .vesselProfileDao().getActiveVessels()
+            .first().isNotEmpty()
+        startDestination = if (hasVessel) Routes.LOGIN else Routes.VESSEL_SETUP
+    }
+    if (startDestination == null) return   // one-frame blank while the check runs
 
     var currentCrewId by rememberSaveable { mutableStateOf(0L) }
 
@@ -54,7 +74,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
     val isLoggedInArea = currentRoute != null &&
             currentRoute != Routes.LOGIN &&
-            currentRoute != Routes.VESSEL_SETUP
+            currentRoute != Routes.VESSEL_SETUP &&
+            currentRoute != Routes.CHIEF_SETUP
 
     if (isLoggedInArea) {
         AppScaffold(
@@ -151,6 +172,28 @@ private fun AppNavGraph(
                 crewId = crewId,
                 role = role,
                 onExitConfirmed = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.VESSEL_SETUP) {
+            VesselSetupScreen(
+                onVesselSaved = { vesselId ->
+                    navController.navigate(Routes.chiefSetupWith(vesselId))
+                }
+            )
+        }
+
+        composable(
+            route = Routes.CHIEF_SETUP,
+            arguments = listOf(navArgument("vesselId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            ChiefSetupScreen(
+                vesselId = backStackEntry.arguments?.getLong("vesselId") ?: 0L,
+                onSetupComplete = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }   // setup is one-way; no back into it
+                    }
+                }
             )
         }
     }

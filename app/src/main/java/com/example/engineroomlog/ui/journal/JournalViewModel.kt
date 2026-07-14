@@ -30,7 +30,7 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
 
     private val _uiState = MutableStateFlow(JournalUiState())
     val uiState: StateFlow<JournalUiState> = _uiState.asStateFlow()
-
+    private fun startOfToday(): Long = startOfDay(System.currentTimeMillis())
     // Which day the journal shows; changing this re-drives the flow below
     private val dayStart = MutableStateFlow(startOfToday())
 
@@ -41,6 +41,7 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
                 activeVesselId = vessel.id
                 activeVesselName = vessel.name
             }
+            catchUpExports()
 
             dayStart.collect { start ->
                 observeDay(start)
@@ -135,11 +136,64 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
         dayStart.update { it + 24L * 60 * 60 * 1000 }
     }
 
-    private fun startOfToday(): Long =
+    private fun startOfDay(millis: Long): Long =
         Calendar.getInstance().apply {
+            timeInMillis = millis
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
+
+    // Export any past day (last 7) that has entries but no PDF yet.
+    // The exporter's write-once guard makes this safe to run repeatedly.
+    private fun catchUpExports() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val today = startOfToday()
+            val since = today - 7 * 24L * 60 * 60 * 1000
+            val dayStarts = logEntryDao.getTimestampsSince(activeVesselId, since)
+                .map { startOfDay(it) }
+                .distinct()
+                .filter { it < today }        // today's page is still open
+
+            for (day in dayStarts) {
+                if (JournalPdfExporter.fileFor(getApplication(), day).exists()) continue
+
+                val groups = groupDao.getGroupsWithParameters(activeVesselId).first()
+                val params = groups.flatMap { gwp ->
+                    gwp.parameters
+                        .filter { it.isActive }
+                        .sortedBy { it.displayOrder }
+                        .map { p -> gwp.group.name to p }
+                }
+                val entries = logEntryDao
+                    .getJournalForRange(activeVesselId, day, day + 24L * 60 * 60 * 1000)
+                    .first()
+                val rows = entries.map { ewr ->
+                    JournalRow(
+                        entryId = ewr.entry.id,
+                        timestamp = ewr.entry.timestamp,
+                        collectedByName = ewr.entry.collectedByName,
+                        collectedByCrewId = ewr.entry.collectedByCrewId,
+                        remarks = ewr.entry.remarks,
+                        status = ewr.entry.status,
+                        postedByName = ewr.entry.postedByName,
+                        postedAt = ewr.entry.postedAt,
+                        values = ewr.readings.associate { it.parameterId to it.value }
+                    )
+                }
+                if (rows.isEmpty()) continue
+
+                JournalPdfExporter(getApplication()).export(
+                    dayStartMillis = day,
+                    vesselName = activeVesselName,
+                    parameters = params,
+                    rows = rows
+                )
+            }
+        }
+    }
+
+
+
 }
