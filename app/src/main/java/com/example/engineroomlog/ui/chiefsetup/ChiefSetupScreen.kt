@@ -57,6 +57,7 @@ fun ChiefSetupScreen(
             value = uiState.employeeNo,
             onValueChange = { viewModel.onEmployeeNoChange(it) },
             label = { Text("Employee no") },
+            supportingText = { Text("Used to log in") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )

@@ -98,10 +98,28 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 }
             }
         ) { paddingModifier ->
-            AppNavGraph(navController, paddingModifier, currentCrewId) { crewId, role -> currentCrewId = crewId; currentRole = role }
+            AppNavGraph(
+                navController = navController,
+                modifier = paddingModifier,
+                currentCrewId = currentCrewId,
+                startDestination = startDestination!!,
+                onLoginResolved = { crewId, role ->
+                    currentCrewId = crewId
+                    currentRole = role
+                }
+            )
         }
     } else {
-        AppNavGraph(navController, modifier, currentCrewId) { crewId, role -> currentCrewId = crewId; currentRole = role }
+        AppNavGraph(
+            navController = navController,
+            modifier = modifier,
+            currentCrewId = currentCrewId,
+            startDestination = startDestination!!,
+            onLoginResolved = { crewId, role ->
+                currentCrewId = crewId
+                currentRole = role
+            }
+        )
     }
 }
 
@@ -109,16 +127,15 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 private fun AppNavGraph(
     navController: androidx.navigation.NavHostController,
     modifier: Modifier,
-    currentCrewId : Long,
+    currentCrewId: Long,
+    startDestination: String,
     onLoginResolved: (Long, String) -> Unit,
-
 ) {
     NavHost(
         navController = navController,
-        startDestination = Routes.LOGIN,
+        startDestination = startDestination,
         modifier = modifier
     ) {
-        composable(Routes.VESSEL_SETUP) { /* mevcut hali */ }
 
         composable(Routes.MANAGE_CREW) {
             ManageCrewScreen(

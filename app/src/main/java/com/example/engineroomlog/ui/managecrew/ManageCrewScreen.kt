@@ -113,7 +113,9 @@ fun ManageCrewScreen(
                     )
                     OutlinedTextField(
                         value = employeeNo, onValueChange = { employeeNo = it },
-                        label = { Text("Employee no") }, singleLine = true
+                        label = { Text("Employee no") },
+                        supportingText = { Text("Used to log in") },
+                        singleLine = true
                     )
                     OutlinedTextField(
                         value = password, onValueChange = { password = it },

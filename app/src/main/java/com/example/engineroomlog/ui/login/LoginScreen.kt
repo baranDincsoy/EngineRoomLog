@@ -57,7 +57,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = uiState.username,
             onValueChange = { viewModel.onUsernameChange(it) },
-            label = { Text("Username") },
+            label = { Text("Employee no") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
