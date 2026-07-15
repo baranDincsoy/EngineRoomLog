@@ -51,9 +51,36 @@ class JournalPdfExporter(private val context: Context) {
         val tableW = pageWidth - 2 * margin
         val timeColW = 50f
         val minParamColW = 90f
-        val colsPerPage = ((tableW - timeColW) / minParamColW).toInt().coerceAtLeast(1)
-        val paramChunks = if (parameters.isEmpty()) listOf(emptyList())
-        else parameters.chunked(colsPerPage)
+        // Group-aware pagination: keep each group intact, pack whole groups onto a page.
+        // A group wider than a page alone gets its own page with narrower columns (min 48f).
+        val preferredColW = 72f
+        val maxColsPerPage = ((tableW - timeColW) / preferredColW).toInt().coerceAtLeast(1)
+
+        val groupsInOrder: List<List<Pair<String, ParameterEntity>>> =
+            parameters.groupBy { it.first }.values.toList()   // insertion order is preserved
+
+        val paramChunks: List<List<Pair<String, ParameterEntity>>> =
+            if (parameters.isEmpty()) listOf(emptyList())
+            else buildList {
+                var current = mutableListOf<Pair<String, ParameterEntity>>()
+                for (group in groupsInOrder) {
+                    when {
+                        // Oversized group: flush what we have, give the group its own page(s)
+                        group.size > maxColsPerPage -> {
+                            if (current.isNotEmpty()) { add(current); current = mutableListOf() }
+                            add(group)
+                        }
+                        // Group fits on the current page next to earlier groups
+                        current.size + group.size <= maxColsPerPage -> current.addAll(group)
+                        // Doesn't fit: start a new page with this group
+                        else -> {
+                            add(current)
+                            current = group.toMutableList()
+                        }
+                    }
+                }
+                if (current.isNotEmpty()) add(current)
+            }
 
         // A journal page is written once; never silently rewritten
         val existing = fileFor(context, dayStartMillis)
@@ -80,7 +107,9 @@ class JournalPdfExporter(private val context: Context) {
 // --- Value table: one page set per column chunk, rows paginate downward ---
 // --- Value table: one page set per column chunk, rows paginate downward ---
         for (chunk in paramChunks) {
-            val paramColW = if (chunk.isEmpty()) 0f else (tableW - timeColW) / chunk.size
+            // Fill the page width, but never narrower than 48f (oversized groups)
+            val paramColW = if (chunk.isEmpty()) 0f
+            else ((tableW - timeColW) / chunk.size).coerceAtLeast(48f)
             var rowIndex = 0
             do {
                 val (page, c) = newPage()

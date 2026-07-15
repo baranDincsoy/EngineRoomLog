@@ -5,46 +5,114 @@ import com.example.engineroomlog.data.local.entity.ParameterGroupEntity
 import com.example.engineroomlog.data.local.model.Cadence
 import com.example.engineroomlog.data.local.model.OperationalState
 
-// Seeds a sensible starter layout for a new vessel. The user reshapes it afterwards —
-// the columns belong to the ship, this is just a starting point.
+// Seeds a realistic starter layout for a new vessel, modeled on a real engine-room log.
+// The user reshapes it afterwards — the columns belong to the ship, this is a starting point.
 object TemplateSeeder {
+
+    // name, unit (null = none), operational state
+    private data class ParamSpec(
+        val name: String,
+        val unit: String?,
+        val state: OperationalState = OperationalState.AT_SEA
+    )
+
+    private val sampleLayout: List<Pair<String, List<ParamSpec>>> = listOf(
+        "Main Engine" to listOf(
+            ParamSpec("RPM", "rpm"),
+            ParamSpec("L.O. Pressure", "bar"),
+            ParamSpec("L.O. Temp", "°C"),
+            ParamSpec("F.O. Pressure", "bar"),
+            ParamSpec("Jacket CW Inlet", "°C"),
+            ParamSpec("Jacket CW Outlet", "°C"),
+            ParamSpec("Scav. Air Pressure", "bar"),
+            ParamSpec("Exh. Temp Cyl 1", "°C"),
+            ParamSpec("Exh. Temp Cyl 2", "°C"),
+            ParamSpec("Exh. Temp Cyl 3", "°C"),
+            ParamSpec("Exh. Temp Cyl 4", "°C"),
+            ParamSpec("Exh. Temp Cyl 5", "°C"),
+            ParamSpec("Exh. Temp Cyl 6", "°C"),
+            ParamSpec("T/C RPM", "rpm"),
+            ParamSpec("T/C Exh. Inlet", "°C")
+        ),
+        "No.1 Generator" to listOf(
+            ParamSpec("Load", "kW", OperationalState.BOTH),
+            ParamSpec("Voltage", "V", OperationalState.BOTH),
+            ParamSpec("Frequency", "Hz", OperationalState.BOTH),
+            ParamSpec("L.O. Pressure", "bar", OperationalState.BOTH),
+            ParamSpec("FW Temp", "°C", OperationalState.BOTH),
+            ParamSpec("SW Temp", "°C", OperationalState.BOTH)
+        ),
+        "No.2 Generator" to listOf(
+            ParamSpec("Load", "kW", OperationalState.BOTH),
+            ParamSpec("Voltage", "V", OperationalState.BOTH),
+            ParamSpec("Frequency", "Hz", OperationalState.BOTH),
+            ParamSpec("L.O. Pressure", "bar", OperationalState.BOTH),
+            ParamSpec("FW Temp", "°C", OperationalState.BOTH),
+            ParamSpec("SW Temp", "°C", OperationalState.BOTH)
+        ),
+        "No.3 Generator" to listOf(
+            ParamSpec("Load", "kW", OperationalState.BOTH),
+            ParamSpec("Voltage", "V", OperationalState.BOTH),
+            ParamSpec("Frequency", "Hz", OperationalState.BOTH),
+            ParamSpec("L.O. Pressure", "bar", OperationalState.BOTH),
+            ParamSpec("FW Temp", "°C", OperationalState.BOTH),
+            ParamSpec("SW Temp", "°C", OperationalState.BOTH)
+        ),
+        "No.4 Generator" to listOf(
+            ParamSpec("Load", "kW", OperationalState.BOTH),
+            ParamSpec("Voltage", "V", OperationalState.BOTH),
+            ParamSpec("Frequency", "Hz", OperationalState.BOTH),
+            ParamSpec("L.O. Pressure", "bar", OperationalState.BOTH),
+            ParamSpec("FW Temp", "°C", OperationalState.BOTH),
+            ParamSpec("SW Temp", "°C", OperationalState.BOTH)
+        ),
+        "Compressors" to listOf(
+            ParamSpec("Main Air Press.", "bar", OperationalState.BOTH),
+            ParamSpec("Service Air Press.", "bar", OperationalState.BOTH)
+        ),
+        "Coolers" to listOf(
+            ParamSpec("M/E High Temp Cooler SW Inlet", "°C"),
+            ParamSpec("M/E High Temp Cooler FW Inlet", "°C"),
+            ParamSpec("M/E High Temp Cooler FW Outlet", "°C"),
+            ParamSpec("M/E Low Temp Cooler SW Inlet", "°C"),
+            ParamSpec("M/E Low Temp Cooler FW Inlet", "°C"),
+            ParamSpec("M/E Low Temp Cooler FW Outlet", "°C"),
+            ParamSpec("M/E Oil Cooler Inlet", "°C"),
+            ParamSpec("M/E Oil Cooler Outlet", "°C"),
+        ),
+        "Tanks" to listOf(
+            ParamSpec("F.O. Settling Tank", "cm", OperationalState.BOTH),
+            ParamSpec("F.O. Service Tank", "cm", OperationalState.BOTH),
+            ParamSpec("D.O. Settling Tank", "cm", OperationalState.BOTH),
+            ParamSpec("D.O. Service Tank", "cm", OperationalState.BOTH)
+        )
+    )
 
     suspend fun seedSampleLayout(db: EngineRoomDatabase, vesselId: Long) {
         val groupDao = db.parameterGroupDao()
         val paramDao = db.parameterDao()
 
-        val mainEngineId = groupDao.insert(
-            ParameterGroupEntity(vesselProfileId = vesselId, name = "Main Engine", displayOrder = 0)
-        )
-        val generatorId = groupDao.insert(
-            ParameterGroupEntity(vesselProfileId = vesselId, name = "Generators", displayOrder = 1)
-        )
-
-        val mainEngine = listOf(
-            Triple("RPM", "rpm", OperationalState.AT_SEA),
-            Triple("L.O. Pressure", "bar", OperationalState.AT_SEA),
-            Triple("Jacket CW Outlet", "°C", OperationalState.AT_SEA)
-        )
-        mainEngine.forEachIndexed { i, (name, unit, state) ->
-            paramDao.insert(
-                ParameterEntity(
-                    groupId = mainEngineId, name = name, unit = unit, state = state,
-                    cadence = Cadence.HOURLY, displayOrder = i, isDefault = true
+        sampleLayout.forEachIndexed { groupIndex, (groupName, params) ->
+            val groupId = groupDao.insert(
+                ParameterGroupEntity(
+                    vesselProfileId = vesselId,
+                    name = groupName,
+                    displayOrder = groupIndex
                 )
             )
-        }
-
-        val generators = listOf(
-            Triple("No.1 Gen Voltage", "V", OperationalState.BOTH),
-            Triple("No.1 Gen Load", "kW", OperationalState.BOTH)
-        )
-        generators.forEachIndexed { i, (name, unit, state) ->
-            paramDao.insert(
-                ParameterEntity(
-                    groupId = generatorId, name = name, unit = unit, state = state,
-                    cadence = Cadence.HOURLY, displayOrder = i, isDefault = true
+            params.forEachIndexed { paramIndex, spec ->
+                paramDao.insert(
+                    ParameterEntity(
+                        groupId = groupId,
+                        name = spec.name,
+                        unit = spec.unit,
+                        state = spec.state,
+                        cadence = Cadence.HOURLY,
+                        displayOrder = paramIndex,
+                        isDefault = true
+                    )
                 )
-            )
+            }
         }
     }
 }
