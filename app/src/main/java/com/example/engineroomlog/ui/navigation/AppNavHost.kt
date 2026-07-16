@@ -15,6 +15,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.engineroomlog.ui.chiefsetup.ChiefSetupScreen
+import com.example.engineroomlog.ui.fleet.FleetScreen
 import com.example.engineroomlog.ui.journal.JournalScreen
 import com.example.engineroomlog.ui.logentry.LogEntryScreen
 import com.example.engineroomlog.ui.login.LoginScreen
@@ -39,6 +40,8 @@ object Routes {
 
     const val CHIEF_SETUP = "chief_setup/{vesselId}"
     fun chiefSetupWith(vesselId: Long) = "chief_setup/$vesselId"
+
+    const val FLEET = "fleet"
 
 }
 
@@ -83,6 +86,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 Routes.JOURNAL -> "Journal"
                 Routes.MANAGE_GROUPS -> "Manage groups"
                 Routes.MANAGE_CREW -> "Manage crew"
+                Routes.FLEET -> "Fleet connection"
                 else -> "Engine Log"
             },
             canEditForm = canEdit,
@@ -91,7 +95,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             onManageCrew = { navController.navigate(Routes.MANAGE_CREW) },
             onJournal = { navController.navigate(Routes.journalWith(currentCrewId, currentRole)) },
             onPdfList = { navController.navigate(Routes.PDF_LIST) },
+
             onEntry = { navController.popBackStack(Routes.HOME, inclusive = false) },
+            onFleet = { navController.navigate(Routes.FLEET) },
             onSignOut = {
                 navController.navigate(Routes.LOGIN) {
                     popUpTo(0) { inclusive = true }
@@ -109,6 +115,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 }
             )
         }
+
     } else {
         AppNavGraph(
             navController = navController,
@@ -153,6 +160,10 @@ private fun AppNavGraph(
                     }
                 }
             )
+        }
+
+        composable(Routes.FLEET) {
+            FleetScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.MANAGE_GROUPS) {

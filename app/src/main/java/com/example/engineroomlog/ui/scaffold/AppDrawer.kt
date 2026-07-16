@@ -33,8 +33,10 @@ fun AppScaffold(
     onSignOut: () -> Unit,
     onJournal: () -> Unit,
     onPdfList: () -> Unit,
+    onFleet: () -> Unit,
     onEntry: () -> Unit,
-    content: @Composable (Modifier) -> Unit
+    content: @Composable (Modifier) -> Unit,
+
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -98,6 +100,18 @@ fun AppScaffold(
                         onClick = {
                             scope.launch { drawerState.close() }
                             onManageCrew()
+                        }
+                    )
+                }
+
+                if (canManageCrew) {
+                    NavigationDrawerItem(
+                        label = { Text("Fleet connection") },
+                        icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                        selected = false,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            onFleet()
                         }
                     )
                 }
