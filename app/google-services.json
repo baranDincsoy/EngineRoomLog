@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "703469505334",
+    "project_id": "engineroomlog",
+    "storage_bucket": "engineroomlog.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:703469505334:android:c55b681c5f7608ecf50197",
+        "android_client_info": {
+          "package_name": "com.example.engineroomlog"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0lCV58JsNW4shlYZ6z1vY4CnPttONceQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
