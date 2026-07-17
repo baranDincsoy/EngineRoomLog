@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.engineroomlog.core.sync.FleetConnection
+import com.example.engineroomlog.core.sync.JournalUploader
 import kotlinx.coroutines.launch
 
 @Composable
@@ -33,6 +34,10 @@ fun FleetScreen(
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
+
+    var syncMsg by remember { mutableStateOf<String?>(null) }
+    var syncing by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Column(
         modifier = modifier
@@ -52,6 +57,29 @@ fun FleetScreen(
                 "Exported journals will be uploaded to the company space when online.",
                 style = MaterialTheme.typography.bodyMedium
             )
+
+            Button(
+                onClick = {
+                    syncing = true; syncMsg = null
+                    scope.launch {
+                        val report = JournalUploader.uploadPending(context)
+                        syncing = false
+                        syncMsg = when {
+                            report.failed -> "Could not reach the fleet space — check network"
+                            report.uploaded == 0 && report.pending == 0 -> "All journals already uploaded"
+                            else -> "Uploaded ${report.uploaded} journal(s)" +
+                                    if (report.pending > 0) ", ${report.pending} pending" else ""
+                        }
+                    }
+                },
+                enabled = !syncing,
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(if (syncing) "Uploading…" else "Sync now") }
+
+            if (syncMsg != null) {
+                Text(syncMsg!!, style = MaterialTheme.typography.bodyMedium)
+            }
+
             Button(
                 onClick = {
                     FleetConnection.disconnect()
