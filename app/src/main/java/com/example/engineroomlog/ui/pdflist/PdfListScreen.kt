@@ -2,6 +2,7 @@ package com.example.engineroomlog.ui.pdflist
 
 import android.content.Intent
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,6 +14,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -48,9 +50,7 @@ fun PdfListScreen(
         }
 
         items(items = pdfs, key = { it.file.name }) { item ->
-            Text(
-                text = "Journal — ${item.dayLabel}",
-                style = MaterialTheme.typography.titleMedium,
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
@@ -65,8 +65,21 @@ fun PdfListScreen(
                         }
                         context.startActivity(intent)
                     }
-                    .padding(vertical = 12.dp)
-            )
+                    .padding(vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Journal — ${item.dayLabel}",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = if (item.uploaded) "✓ Uploaded" else "⏳ Pending",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (item.uploaded) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.outline
+                )
+            }
         }
     }
 }

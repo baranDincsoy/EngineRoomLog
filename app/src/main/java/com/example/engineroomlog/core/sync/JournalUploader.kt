@@ -35,7 +35,10 @@ object JournalUploader {
         for (pdf in localPdfs.sortedBy { it.name }) {
             if (pdf.name in remoteNames) continue
             try {
-                remoteRef.child(pdf.name).putFile(android.net.Uri.fromFile(pdf)).await()
+                val metadata = com.google.firebase.storage.StorageMetadata.Builder()
+                    .setCustomMetadata("sha256", com.example.engineroomlog.core.pdf.PdfHasher.sha256(pdf))
+                    .build()
+                remoteRef.child(pdf.name).putFile(android.net.Uri.fromFile(pdf), metadata).await()
                 uploaded++
             } catch (e: Exception) {
                 pending++   // network dropped mid-batch; the rest waits for next run
@@ -50,4 +53,47 @@ object JournalUploader {
         val notConnected: Boolean = false,
         val failed: Boolean = false
     )
+
+    // Names of journals already in the cloud — for the PDF list's status marks
+    suspend fun remoteJournalNames(): Set<String> {
+        val folder = fleetFolder() ?: return emptySet()
+        return try {
+            com.google.firebase.storage.FirebaseStorage.getInstance().reference
+                .child("vessels").child(folder).child("journals")
+                .listAll().await().items.map { it.name }.toSet()
+        } catch (e: Exception) {
+            emptySet()   // offline or not connected: nothing confirmed uploaded
+        }
+    }
+
+    data class VerifyReport(val verified: Int, val mismatched: List<String>, val unchecked: Int)
+
+    // Re-hash local files and compare with the cloud's recorded fingerprints
+    suspend fun verifyIntegrity(context: Context): VerifyReport {
+        val folder = fleetFolder() ?: return VerifyReport(0, emptyList(), 0)
+        val localDir = File(context.filesDir, "journals")
+        val localPdfs = localDir.listFiles { f -> f.extension == "pdf" } ?: emptyArray()
+
+        val remoteRef = com.google.firebase.storage.FirebaseStorage.getInstance().reference
+            .child("vessels").child(folder).child("journals")
+
+        var verified = 0
+        var unchecked = 0
+        val mismatched = mutableListOf<String>()
+
+        for (pdf in localPdfs) {
+            try {
+                val meta = remoteRef.child(pdf.name).metadata.await()
+                val cloudHash = meta.getCustomMetadata("sha256")
+                when {
+                    cloudHash == null -> unchecked++   // uploaded before hashing existed
+                    cloudHash == com.example.engineroomlog.core.pdf.PdfHasher.sha256(pdf) -> verified++
+                    else -> mismatched.add(pdf.name)
+                }
+            } catch (e: Exception) {
+                unchecked++   // not uploaded yet, or offline
+            }
+        }
+        return VerifyReport(verified, mismatched, unchecked)
+    }
 }

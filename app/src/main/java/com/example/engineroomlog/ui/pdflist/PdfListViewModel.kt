@@ -2,12 +2,17 @@ package com.example.engineroomlog.ui.pdflist
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.engineroomlog.core.sync.JournalUploader
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.io.File
 
-data class PdfItem(val file: File, val dayLabel: String)
+data class PdfItem(val file: File, val dayLabel: String, val uploaded: Boolean = false)
+
+
 
 class PdfListViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -17,16 +22,18 @@ class PdfListViewModel(application: Application) : AndroidViewModel(application)
     init { refresh() }
 
     fun refresh() {
-        val dir = File(getApplication<Application>().filesDir, "journals")
-        _pdfs.value = (dir.listFiles { f -> f.extension == "pdf" } ?: emptyArray())
-            .sortedByDescending { it.name }          // newest day first
-            .map { f ->
-                // journal_2026-07-08.pdf -> 08.07.2026
-                val day = f.nameWithoutExtension.removePrefix("journal_")
-                val label = day.split("-").let {
-                    if (it.size == 3) "${it[2]}.${it[1]}.${it[0]}" else day
+        viewModelScope.launch {
+            val remote = JournalUploader.remoteJournalNames()
+            val dir = File(getApplication<Application>().filesDir, "journals")
+            _pdfs.value = (dir.listFiles { f -> f.extension == "pdf" } ?: emptyArray())
+                .sortedByDescending { it.name }
+                .map { f ->
+                    val day = f.nameWithoutExtension.removePrefix("journal_")
+                    val label = day.split("-").let {
+                        if (it.size == 3) "${it[2]}.${it[1]}.${it[0]}" else day
+                    }
+                    PdfItem(f, label, uploaded = f.name in remote)
                 }
-                PdfItem(f, label)
-            }
+        }
     }
 }

@@ -80,6 +80,25 @@ fun FleetScreen(
                 Text(syncMsg!!, style = MaterialTheme.typography.bodyMedium)
             }
 
+            var verifyMsg by remember { mutableStateOf<String?>(null) }
+
+            Button(
+                onClick = {
+                    scope.launch {
+                        val r = JournalUploader.verifyIntegrity(context)
+                        verifyMsg = if (r.mismatched.isEmpty())
+                            "${r.verified} journal(s) verified" +
+                                    if (r.unchecked > 0) ", ${r.unchecked} unchecked" else ""
+                        else "INTEGRITY FAILURE: ${r.mismatched.joinToString()}"
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Verify integrity") }
+
+            if (verifyMsg != null) {
+                Text(verifyMsg!!, style = MaterialTheme.typography.bodyMedium)
+            }
+
             Button(
                 onClick = {
                     FleetConnection.disconnect()
