@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.lifecycleScope
 import com.example.engineroomlog.core.security.PasswordHasher
+import com.example.engineroomlog.core.sync.AutoSync
 import com.example.engineroomlog.data.local.database.DatabaseProvider
 import com.example.engineroomlog.data.local.entity.CrewMemberEntity
 import com.example.engineroomlog.data.local.entity.ParameterEntity
@@ -33,7 +34,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
+        AutoSync.start(this, lifecycleScope)
         setContent {
             EngineRoomLogTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
