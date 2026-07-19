@@ -83,6 +83,20 @@ interface LogEntryDao {
                 "AND timestamp >= :sinceMillis"
     )
     suspend fun getTimestampsSince(vesselId: Long, sinceMillis: Long): List<Long>
+
+    // Entries not yet mirrored to the fleet cloud (or changed since last mirror)
+    @Query(
+        "SELECT * FROM log_entries " +
+                "WHERE vesselProfileId = :vesselId AND isArchived = 0 " +
+                "AND (syncedAt IS NULL OR syncedAt < postedAt)"
+    )
+    suspend fun getUnsyncedEntries(vesselId: Long): List<LogEntryEntity>
+
+    @Query("UPDATE log_entries SET syncedAt = :at WHERE id = :entryId")
+    suspend fun markSynced(entryId: Long, at: Long)
+
+
+
 }
 
 
