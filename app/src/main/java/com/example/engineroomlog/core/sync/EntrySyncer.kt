@@ -18,7 +18,7 @@ object EntrySyncer {
 
     suspend fun syncPending(context: Context): SyncReport {
         val folder = fleetFolder() ?: return SyncReport(0, 0, notConnected = true)
-
+        if (!NetworkCheck.isOnline(context)) return SyncReport(0, 0, notConnected = true)
         val db = DatabaseProvider.getDatabase(context)
         val logEntryDao = db.logEntryDao()
         val readingDao = db.readingDao()

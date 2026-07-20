@@ -12,8 +12,6 @@ import java.io.File
 
 data class PdfItem(val file: File, val dayLabel: String, val uploaded: Boolean = false)
 
-
-
 class PdfListViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _pdfs = MutableStateFlow<List<PdfItem>>(emptyList())
@@ -23,17 +21,23 @@ class PdfListViewModel(application: Application) : AndroidViewModel(application)
 
     fun refresh() {
         viewModelScope.launch {
-            val remote = JournalUploader.remoteJournalNames()
             val dir = File(getApplication<Application>().filesDir, "journals")
-            _pdfs.value = (dir.listFiles { f -> f.extension == "pdf" } ?: emptyArray())
+            val localFiles = (dir.listFiles { f -> f.extension == "pdf" } ?: emptyArray())
                 .sortedByDescending { it.name }
-                .map { f ->
-                    val day = f.nameWithoutExtension.removePrefix("journal_")
-                    val label = day.split("-").let {
-                        if (it.size == 3) "${it[2]}.${it[1]}.${it[0]}" else day
-                    }
-                    PdfItem(f, label, uploaded = f.name in remote)
+
+            // Guarded remote lookup — offline returns cache, never throws
+            val remote = try {
+                JournalUploader.remoteJournalNames(getApplication())
+            } catch (e: Exception) {
+                emptySet()
+            }
+            _pdfs.value = localFiles.map { f ->
+                val day = f.nameWithoutExtension.removePrefix("journal_")
+                val label = day.split("-").let {
+                    if (it.size == 3) "${it[2]}.${it[1]}.${it[0]}" else day
                 }
+                PdfItem(f, label, uploaded = f.name in remote)
+            }
         }
     }
 }

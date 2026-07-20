@@ -14,9 +14,25 @@ object JournalUploader {
     private fun fleetFolder(): String? =
         FleetConnection.fleetId?.replace("@", "_at_")?.replace(".", "_")
 
+    private const val PREFS = "sync_cache"
+    private const val KEY_UPLOADED = "uploaded_pdfs"
+
+    private fun cacheUploaded(context: Context, names: Set<String>) {
+        // Store as a single newline-joined string — more reliable than putStringSet
+        val joined = names.joinToString("\n")
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putString(KEY_UPLOADED, joined).apply()
+    }
+
+    private fun cachedUploaded(context: Context): Set<String> {
+        val joined = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(KEY_UPLOADED, "") ?: ""
+        val set = if (joined.isEmpty()) emptySet() else joined.split("\n").toSet()
+        return set
+    }
     suspend fun uploadPending(context: Context): UploadReport {
         val folder = fleetFolder() ?: return UploadReport(0, 0, notConnected = true)
-
+        if (!NetworkCheck.isOnline(context)) return UploadReport(0, 0, notConnected = true)
         val localDir = File(context.filesDir, "journals")
         val localPdfs = localDir.listFiles { f -> f.extension == "pdf" } ?: emptyArray()
         if (localPdfs.isEmpty()) return UploadReport(0, 0)
@@ -31,6 +47,7 @@ object JournalUploader {
         }
 
         var uploaded = 0
+        val newlyUploaded = mutableListOf<String>()
         var pending = 0
         for (pdf in localPdfs.sortedBy { it.name }) {
             if (pdf.name in remoteNames) continue
@@ -40,10 +57,12 @@ object JournalUploader {
                     .build()
                 remoteRef.child(pdf.name).putFile(android.net.Uri.fromFile(pdf), metadata).await()
                 uploaded++
+                newlyUploaded.add(pdf.name)
             } catch (e: Exception) {
                 pending++   // network dropped mid-batch; the rest waits for next run
             }
         }
+        cacheUploaded(context, remoteNames + newlyUploaded)
         return UploadReport(uploaded, pending)
     }
 
@@ -54,15 +73,19 @@ object JournalUploader {
         val failed: Boolean = false
     )
 
-    // Names of journals already in the cloud — for the PDF list's status marks
-    suspend fun remoteJournalNames(): Set<String> {
-        val folder = fleetFolder() ?: return emptySet()
+    // Names of journals already in the cloud — cached so the status
+    // survives offline periods (a ship is offline most of its life)
+    suspend fun remoteJournalNames(context: Context): Set<String> {
+        val folder = fleetFolder() ?: return cachedUploaded(context)
+        if (!NetworkCheck.isOnline(context)) return cachedUploaded(context)
         return try {
-            com.google.firebase.storage.FirebaseStorage.getInstance().reference
+            val names = FirebaseStorage.getInstance().reference
                 .child("vessels").child(folder).child("journals")
                 .listAll().await().items.map { it.name }.toSet()
+            cacheUploaded(context, names)
+            names
         } catch (e: Exception) {
-            emptySet()   // offline or not connected: nothing confirmed uploaded
+            cachedUploaded(context)   // offline: last known truth beats a blank stare
         }
     }
 
