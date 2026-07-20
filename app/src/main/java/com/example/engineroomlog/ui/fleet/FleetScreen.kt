@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.engineroomlog.core.sync.EntrySyncer
 import com.example.engineroomlog.core.sync.FleetConnection
 import com.example.engineroomlog.core.sync.JournalUploader
 import kotlinx.coroutines.launch
@@ -63,6 +64,7 @@ fun FleetScreen(
                     syncing = true; syncMsg = null
                     scope.launch {
                         val report = JournalUploader.uploadPending(context)
+                        val entryReport = EntrySyncer.syncPending(context)
                         syncing = false
                         syncMsg = when {
                             report.failed -> "Could not reach the fleet space — check network"
@@ -70,6 +72,7 @@ fun FleetScreen(
                             else -> "Uploaded ${report.uploaded} journal(s)" +
                                     if (report.pending > 0) ", ${report.pending} pending" else ""
                         }
+                        if (entryReport.synced > 0) syncMsg += " · ${entryReport.synced} entries synced"
                     }
                 },
                 enabled = !syncing,

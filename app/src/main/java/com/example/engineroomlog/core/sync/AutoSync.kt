@@ -21,7 +21,10 @@ object AutoSync {
         val appContext = context.applicationContext
 
         // Attempt 1: app start (harmless if offline or not connected — uploader just returns)
-        scope.launch { JournalUploader.uploadPending(appContext) }
+        scope.launch {
+            JournalUploader.uploadPending(appContext)
+            EntrySyncer.syncPending(appContext)
+        }
 
         // Attempt 2+: every time internet becomes available
         val cm = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -30,7 +33,10 @@ object AutoSync {
             .build()
         cm.registerNetworkCallback(request, object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
-                scope.launch { JournalUploader.uploadPending(appContext) }
+                scope.launch {
+                    JournalUploader.uploadPending(appContext)
+                    EntrySyncer.syncPending(appContext)
+                }
             }
         })
     }

@@ -16,6 +16,10 @@ interface ReadingDao {
     suspend fun insertAll(readings: List<ReadingEntity>)
 
     // All raw readings belonging to one log entry
-    @Query("SELECT * FROM readings WHERE logEntryId = :logEntryId")
-    suspend fun getReadingsForEntry(logEntryId: Long): List<ReadingEntity>
+    @Query("SELECT * FROM readings WHERE logEntryId = :entryId")
+    suspend fun getReadingsForEntry(entryId: Long): List<ReadingEntity>
+
+
+
+
 }
