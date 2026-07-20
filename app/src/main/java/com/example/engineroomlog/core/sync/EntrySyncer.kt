@@ -36,6 +36,7 @@ object EntrySyncer {
 
         var synced = 0
         var failed = 0
+        val syncStartedAt = System.currentTimeMillis()
         for (entry in pending) {
             try {
                 val readings = readingDao.getReadingsForEntry(entry.id)
@@ -52,7 +53,7 @@ object EntrySyncer {
                 )
                 entriesRef.document(entry.id.toString())
                     .set(doc, SetOptions.merge()).await()
-                logEntryDao.markSynced(entry.id, System.currentTimeMillis())
+                logEntryDao.markSynced(entry.id, syncStartedAt)
                 synced++
             } catch (e: Exception) {
                 failed++   // network dropped; the rest stays queued for next run

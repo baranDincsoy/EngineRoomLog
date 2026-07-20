@@ -11,6 +11,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.example.engineroomlog.core.sync.EntrySyncer
 import com.example.engineroomlog.core.sync.FleetConnection
 import com.example.engineroomlog.core.sync.JournalUploader
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @Composable
@@ -59,6 +61,23 @@ fun FleetScreen(
                 style = MaterialTheme.typography.bodyMedium
             )
 
+            var pendingEntries by remember { mutableStateOf<Int?>(null) }
+            LaunchedEffect(Unit) {
+                val db = com.example.engineroomlog.data.local.database.DatabaseProvider
+                    .getDatabase(context)
+                val vessel = db.vesselProfileDao().getActiveVessels().first().firstOrNull()
+                if (vessel != null) {
+                    pendingEntries = db.logEntryDao().getUnsyncedEntries(vessel.id).size
+                }
+            }
+            if (pendingEntries != null && pendingEntries!! > 0) {
+                Text(
+                    "$pendingEntries entr${if (pendingEntries == 1) "y" else "ies"} waiting to sync",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+            }
+
             Button(
                 onClick = {
                     syncing = true; syncMsg = null
@@ -73,6 +92,7 @@ fun FleetScreen(
                                     if (report.pending > 0) ", ${report.pending} pending" else ""
                         }
                         if (entryReport.synced > 0) syncMsg += " · ${entryReport.synced} entries synced"
+                        if (entryReport.failed == 0) pendingEntries = 0
                     }
                 },
                 enabled = !syncing,
