@@ -35,6 +35,7 @@ fun AppScaffold(
     onPdfList: () -> Unit,
     onFleet: () -> Unit,
     onEntry: () -> Unit,
+    onPermissions: () -> Unit,
     content: @Composable (Modifier) -> Unit,
 
 ) {
@@ -100,6 +101,18 @@ fun AppScaffold(
                         onClick = {
                             scope.launch { drawerState.close() }
                             onManageCrew()
+                        }
+                    )
+                }
+
+                if (canManageCrew) {
+                    NavigationDrawerItem(
+                        label = { Text("Permissions") },
+                        icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                        selected = false,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            onPermissions()
                         }
                     )
                 }

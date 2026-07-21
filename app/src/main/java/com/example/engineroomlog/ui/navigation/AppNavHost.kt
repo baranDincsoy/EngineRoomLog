@@ -24,6 +24,7 @@ import com.example.engineroomlog.ui.login.LoginScreen
 import com.example.engineroomlog.ui.managecrew.ManageCrewScreen
 import com.example.engineroomlog.ui.managegroups.ManageGroupsScreen
 import com.example.engineroomlog.ui.pdflist.PdfListScreen
+import com.example.engineroomlog.ui.permissions.PermissionMatrixScreen
 import com.example.engineroomlog.ui.scaffold.AppScaffold
 import com.example.engineroomlog.ui.vesselsetup.VesselSetupScreen
 import kotlinx.coroutines.flow.first
@@ -44,6 +45,7 @@ object Routes {
     fun chiefSetupWith(vesselId: Long) = "chief_setup/$vesselId"
 
     const val FLEET = "fleet"
+    const val PERMISSIONS = "permissions"
 
 }
 
@@ -97,6 +99,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 Routes.MANAGE_GROUPS -> "Manage groups"
                 Routes.MANAGE_CREW -> "Manage crew"
                 Routes.FLEET -> "Fleet connection"
+                Routes.PERMISSIONS -> "Permissions"
+                Routes.PDF_LIST -> "PDF list"
                 else -> "Engine Log"
             },
             canEditForm = canEdit,
@@ -108,6 +112,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             onEntry = { navController.popBackStack(Routes.HOME, inclusive = false) },
             onFleet = { navController.navigate(Routes.FLEET) },
+            onPermissions = { navController.navigate(Routes.PERMISSIONS) },
             onSignOut = {
                 navController.navigate(Routes.LOGIN) {
                     popUpTo(0) { inclusive = true }
@@ -147,6 +152,7 @@ private fun AppNavGraph(
     currentCrewId: Long,
     startDestination: String,
     onLoginResolved: (Long, String) -> Unit,
+
 ) {
     NavHost(
         navController = navController,
@@ -195,6 +201,10 @@ private fun AppNavGraph(
 
         composable(Routes.PDF_LIST) {
             PdfListScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.PERMISSIONS) {
+            PermissionMatrixScreen(onBack = { navController.popBackStack() })
         }
 
         composable(
