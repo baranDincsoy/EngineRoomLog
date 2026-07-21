@@ -2,8 +2,12 @@ package com.example.engineroomlog.data.local.database
 
 import com.example.engineroomlog.data.local.entity.ParameterEntity
 import com.example.engineroomlog.data.local.entity.ParameterGroupEntity
+import com.example.engineroomlog.data.local.entity.RankPermissionEntity
 import com.example.engineroomlog.data.local.model.Cadence
 import com.example.engineroomlog.data.local.model.OperationalState
+import com.example.engineroomlog.data.local.model.Permission
+import com.example.engineroomlog.data.local.model.Ranks
+
 
 // Seeds a realistic starter layout for a new vessel, modeled on a real engine-room log.
 // The user reshapes it afterwards — the columns belong to the ship, this is a starting point.
@@ -87,10 +91,48 @@ object TemplateSeeder {
             ParamSpec("D.O. Service Tank", "cm", OperationalState.BOTH)
         )
     )
+    suspend fun seedDefaultPermissions(db: EngineRoomDatabase, vesselId: Long) {
+        val dao = db.rankPermissionDao()
+
+        // Seniority tiers — a sensible starting point the chief can reshape later
+        val everything = Permission.entries.toList()
+        val operational = listOf(
+            Permission.RECORD_READINGS, Permission.POST_ENTRY, Permission.VIEW_JOURNAL,
+            Permission.EXPORT_PDF, Permission.EDIT_FORM
+        )
+        val base = listOf(Permission.RECORD_READINGS, Permission.VIEW_JOURNAL)
+
+        val byRank: Map<String, List<Permission>> = mapOf(
+            Ranks.CHIEF_ENGINEER to everything,
+            Ranks.SECOND_ENGINEER to everything,
+            Ranks.THIRD_ENGINEER to operational,
+            Ranks.FOURTH_ENGINEER to operational,
+            Ranks.ELECTRICAL_OFFICER to operational,
+            Ranks.FITTER to base,
+            Ranks.MOTORMAN to base,
+            Ranks.OILER to base,
+            Ranks.WIPER to base
+        )
+
+        byRank.forEach { (rank, perms) ->
+            perms.forEach { perm ->
+                dao.grant(
+                    RankPermissionEntity(
+                        vesselProfileId = vesselId,
+                        rank = rank,
+                        permission = perm
+                    )
+                )
+            }
+        }
+    }
+
+
 
     suspend fun seedSampleLayout(db: EngineRoomDatabase, vesselId: Long) {
         val groupDao = db.parameterGroupDao()
         val paramDao = db.parameterDao()
+
 
         sampleLayout.forEachIndexed { groupIndex, (groupName, params) ->
             val groupId = groupDao.insert(
@@ -115,4 +157,6 @@ object TemplateSeeder {
             }
         }
     }
+
+
 }

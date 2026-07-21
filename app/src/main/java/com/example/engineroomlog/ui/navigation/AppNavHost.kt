@@ -14,6 +14,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.engineroomlog.data.local.database.DatabaseProvider
+import com.example.engineroomlog.data.local.database.TemplateSeeder
 import com.example.engineroomlog.ui.chiefsetup.ChiefSetupScreen
 import com.example.engineroomlog.ui.fleet.FleetScreen
 import com.example.engineroomlog.ui.journal.JournalScreen
@@ -56,10 +58,18 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         androidx.compose.runtime.mutableStateOf<String?>(null)
     }
     LaunchedEffect(Unit) {
-        val hasVessel = com.example.engineroomlog.data.local.database.DatabaseProvider
-            .getDatabase(context)
-            .vesselProfileDao().getActiveVessels()
-            .first().isNotEmpty()
+        val database = DatabaseProvider.getDatabase(context)
+        val vessels = database.vesselProfileDao().getActiveVessels().first()
+        val hasVessel = vessels.isNotEmpty()
+
+        // Backfill permission matrix for vessels created before the matrix existed
+        vessels.forEach { v ->
+            val existing = database.rankPermissionDao().getMatrix(v.id).first()
+            if (existing.isEmpty()) {
+                TemplateSeeder.seedDefaultPermissions(database, v.id)
+            }
+        }
+
         startDestination = if (hasVessel) Routes.LOGIN else Routes.VESSEL_SETUP
     }
     if (startDestination == null) return   // one-frame blank while the check runs

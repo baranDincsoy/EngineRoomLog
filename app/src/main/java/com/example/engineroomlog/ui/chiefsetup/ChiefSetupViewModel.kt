@@ -61,6 +61,7 @@ class ChiefSetupViewModel(application: Application) : AndroidViewModel(applicati
             if (s.useSampleLayout) {
                 TemplateSeeder.seedSampleLayout(db, vesselId)
             }
+            TemplateSeeder.seedDefaultPermissions(db, vesselId)   // always — the app needs a matrix to function
             _uiState.update { it.copy(isSaving = false, done = true) }
         }
     }
