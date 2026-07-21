@@ -10,9 +10,25 @@ object DatabaseProvider {
     // v1 -> v2: add nullable watch column to log_entries.
     // Nullable TEXT needs no DEFAULT; existing rows will hold NULL.
 
-    private val MIGRATION_2_3 = object : Migration(2, 3) {
+    private val MIGRATION_3_4 = object : Migration(3, 4) {
         override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("ALTER TABLE log_entries ADD COLUMN syncedAt INTEGER")
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `rank_permissions` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`vesselProfileId` INTEGER NOT NULL, " +
+                        "`rank` TEXT NOT NULL, " +
+                        "`permission` TEXT NOT NULL, " +
+                        "FOREIGN KEY(`vesselProfileId`) REFERENCES `vessel_profiles`(`id`) ON DELETE CASCADE)"
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_rank_permissions_vesselProfileId` " +
+                        "ON `rank_permissions` (`vesselProfileId`)"
+            )
+            db.execSQL(
+                "CREATE UNIQUE INDEX IF NOT EXISTS " +
+                        "`index_rank_permissions_vesselProfileId_rank_permission` " +
+                        "ON `rank_permissions` (`vesselProfileId`, `rank`, `permission`)"
+            )
         }
     }
 
@@ -27,7 +43,7 @@ object DatabaseProvider {
                 EngineRoomDatabase::class.java,
                 "engine_room_log.db"
             )
-                .addMigrations(MIGRATION_2_3)
+                .addMigrations(MIGRATION_3_4)
                 .build()
                 .also { instance = it }
         }

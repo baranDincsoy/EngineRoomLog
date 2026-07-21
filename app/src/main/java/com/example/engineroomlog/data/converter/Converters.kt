@@ -5,6 +5,7 @@ import com.example.engineroomlog.data.local.model.Cadence
 import com.example.engineroomlog.data.local.model.CrewRole
 import com.example.engineroomlog.data.local.model.EntryStatus
 import com.example.engineroomlog.data.local.model.OperationalState
+import com.example.engineroomlog.data.local.model.Permission
 
 class Converters {
 
@@ -32,4 +33,10 @@ class Converters {
 
     @TypeConverter
     fun toEntryStatus(value: String): EntryStatus = EntryStatus.valueOf(value)
+
+    @TypeConverter
+    fun fromPermission(value: Permission): String = value.name
+
+    @TypeConverter
+    fun toPermission(value: String): Permission = Permission.valueOf(value)
 }

@@ -8,12 +8,14 @@ import com.example.engineroomlog.data.local.dao.CrewMemberDao
 import com.example.engineroomlog.data.local.dao.LogEntryDao
 import com.example.engineroomlog.data.local.dao.ParameterDao
 import com.example.engineroomlog.data.local.dao.ParameterGroupDao
+import com.example.engineroomlog.data.local.dao.RankPermissionDao
 import com.example.engineroomlog.data.local.dao.ReadingDao
 import com.example.engineroomlog.data.local.dao.VesselProfileDao
 import com.example.engineroomlog.data.local.entity.CrewMemberEntity
 import com.example.engineroomlog.data.local.entity.LogEntryEntity
 import com.example.engineroomlog.data.local.entity.ParameterEntity
 import com.example.engineroomlog.data.local.entity.ParameterGroupEntity
+import com.example.engineroomlog.data.local.entity.RankPermissionEntity
 import com.example.engineroomlog.data.local.entity.ReadingEntity
 import com.example.engineroomlog.data.local.entity.VesselProfileEntity
 
@@ -24,9 +26,10 @@ import com.example.engineroomlog.data.local.entity.VesselProfileEntity
         ParameterEntity::class,
         CrewMemberEntity::class,
         LogEntryEntity::class,
-        ReadingEntity::class
+        ReadingEntity::class,
+        RankPermissionEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -37,4 +40,5 @@ abstract class EngineRoomDatabase : RoomDatabase() {
     abstract fun logEntryDao(): LogEntryDao
     abstract fun readingDao(): ReadingDao
     abstract fun crewMemberDao(): CrewMemberDao
+    abstract fun rankPermissionDao(): RankPermissionDao
 }
