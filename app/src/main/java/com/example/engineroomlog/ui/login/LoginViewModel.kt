@@ -53,7 +53,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 it.copy(
                     isLoading = false,
                     loggedInCrewId = member.id,
-                    loggedInRole = member.role
+                    loggedInRank = member.rank
                 )
             }
         }

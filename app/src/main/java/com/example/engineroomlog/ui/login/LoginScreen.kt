@@ -23,7 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (crewId: Long, role: String) -> Unit,
+    onLoginSuccess: (crewId: Long, rank: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = viewModel()
 ) {
@@ -31,13 +31,12 @@ fun LoginScreen(
 
 
     // Fire navigation once login succeeds (simple version for now)
-    if (uiState.loggedInCrewId != null && uiState.loggedInRole != null) {
-        // Navigate exactly once when login succeeds
+    if (uiState.loggedInCrewId != null && uiState.loggedInRank != null) {
         LaunchedEffect(uiState.loggedInCrewId) {
             val crewId = uiState.loggedInCrewId
-            val role = uiState.loggedInRole
-            if (crewId != null && role != null) {
-                onLoginSuccess(crewId, role.name)
+            val rank = uiState.loggedInRank
+            if (crewId != null && rank != null) {
+                onLoginSuccess(crewId, rank)
             }
         }
     }

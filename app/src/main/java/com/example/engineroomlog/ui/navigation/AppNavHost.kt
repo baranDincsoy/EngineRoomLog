@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.engineroomlog.data.local.database.DatabaseProvider
 import com.example.engineroomlog.data.local.database.TemplateSeeder
+import com.example.engineroomlog.data.local.model.Ranks
 import com.example.engineroomlog.ui.chiefsetup.ChiefSetupScreen
 import com.example.engineroomlog.ui.fleet.FleetScreen
 import com.example.engineroomlog.ui.journal.JournalScreen
@@ -33,19 +34,24 @@ import kotlinx.coroutines.flow.first
 object Routes {
     const val VESSEL_SETUP = "vessel_setup"
     const val LOGIN = "login"
-    const val HOME = "home/{crewId}/{role}"
+    const val HOME = "home/{crewId}/{rank}"
     const val MANAGE_GROUPS = "manage_groups"
-    const val JOURNAL = "journal/{crewId}/{role}"
+
+    const val JOURNAL = "journal/{crewId}/{rank}"
     const val MANAGE_CREW = "manage_crew"
     const val PDF_LIST = "pdf_list"
-    fun journalWith(crewId: Long, role: String) = "journal/$crewId/$role"
-    fun homeWith(crewId: Long, role: String) = "home/$crewId/$role"
+    fun journalWith(crewId: Long, rank: String) = "journal/$crewId/$rank"
+    fun homeWith(crewId: Long, rank: String) = "home/$crewId/$rank"
 
     const val CHIEF_SETUP = "chief_setup/{vesselId}"
     fun chiefSetupWith(vesselId: Long) = "chief_setup/$vesselId"
 
     const val FLEET = "fleet"
     const val PERMISSIONS = "permissions"
+
+
+
+
 
 }
 
@@ -83,9 +89,11 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     val currentRoute = backStackEntry?.destination?.route
 
     // Role travels with the HOME route args; remember it after login
-    var currentRole by rememberSaveable { mutableStateOf("OILER") }
-    val canEdit = currentRole == "ENGINEER" || currentRole == "CHIEF"
-    val canManageCrew = currentRole == "CHIEF"
+    var currentRank by rememberSaveable { mutableStateOf("") }
+    val canEdit = currentRank == Ranks.CHIEF_ENGINEER || currentRank == Ranks.SECOND_ENGINEER ||
+            currentRank == Ranks.THIRD_ENGINEER || currentRank == Ranks.FOURTH_ENGINEER ||
+            currentRank == Ranks.ELECTRICAL_OFFICER
+    val canManageCrew = currentRank == Ranks.CHIEF_ENGINEER || currentRank == Ranks.SECOND_ENGINEER
 
     val isLoggedInArea = currentRoute != null &&
             currentRoute != Routes.LOGIN &&
@@ -107,7 +115,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             canManageCrew = canManageCrew,
             onManageGroups = { navController.navigate(Routes.MANAGE_GROUPS) },
             onManageCrew = { navController.navigate(Routes.MANAGE_CREW) },
-            onJournal = { navController.navigate(Routes.journalWith(currentCrewId, currentRole)) },
+            onJournal = { navController.navigate(Routes.journalWith(currentCrewId, currentRank)) },
             onPdfList = { navController.navigate(Routes.PDF_LIST) },
 
             onEntry = { navController.popBackStack(Routes.HOME, inclusive = false) },
@@ -124,9 +132,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 modifier = paddingModifier,
                 currentCrewId = currentCrewId,
                 startDestination = startDestination!!,
-                onLoginResolved = { crewId, role ->
+                onLoginResolved = { crewId, rank ->
                     currentCrewId = crewId
-                    currentRole = role
+                    currentRank = rank
                 }
             )
         }
@@ -137,9 +145,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             modifier = modifier,
             currentCrewId = currentCrewId,
             startDestination = startDestination!!,
-            onLoginResolved = { crewId, role ->
+            onLoginResolved = { crewId, rank ->
                 currentCrewId = crewId
-                currentRole = role
+                currentRank = rank
             }
         )
     }
@@ -152,6 +160,7 @@ private fun AppNavGraph(
     currentCrewId: Long,
     startDestination: String,
     onLoginResolved: (Long, String) -> Unit,
+    
 
 ) {
     NavHost(
@@ -169,9 +178,9 @@ private fun AppNavGraph(
 
         composable(Routes.LOGIN) {
             LoginScreen(
-                onLoginSuccess = { crewId, role ->
-                    onLoginResolved(crewId, role)
-                    navController.navigate(Routes.homeWith(crewId, role)) {
+                onLoginSuccess = { crewId, rank  ->
+                    onLoginResolved(crewId, rank )
+                    navController.navigate(Routes.homeWith(crewId, rank )) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 }
@@ -190,12 +199,12 @@ private fun AppNavGraph(
             route = Routes.JOURNAL,
             arguments = listOf(
                 navArgument("crewId") { type = NavType.LongType },
-                navArgument("role") { type = NavType.StringType }
+                navArgument("rank") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             JournalScreen(
                 crewId = backStackEntry.arguments?.getLong("crewId") ?: 0L,
-                role = backStackEntry.arguments?.getString("role") ?: "OILER"
+                rank = backStackEntry.arguments?.getString("rank") ?: "OILER"
             )
         }
 
@@ -211,14 +220,14 @@ private fun AppNavGraph(
             route = Routes.HOME,
             arguments = listOf(
                 navArgument("crewId") { type = NavType.LongType },
-                navArgument("role") { type = NavType.StringType }
+                navArgument("rank") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val crewId = backStackEntry.arguments?.getLong("crewId") ?: 0L
-            val role = backStackEntry.arguments?.getString("role") ?: "OILER"
+            val rank = backStackEntry.arguments?.getString("rank") ?: "OILER"
             LogEntryScreen(
                 crewId = crewId,
-                role = role,
+                rank = rank,
                 onExitConfirmed = { navController.popBackStack() }
             )
         }

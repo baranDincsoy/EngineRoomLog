@@ -35,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.engineroomlog.data.local.model.EntryStatus
+import com.example.engineroomlog.data.local.model.Ranks
 
 private val TIME_COL_WIDTH = 72.dp
 private val VALUE_COL_WIDTH = 84.dp
@@ -42,12 +43,14 @@ private val VALUE_COL_WIDTH = 84.dp
 @Composable
 fun JournalScreen(
     crewId: Long,
-    role: String,
+    rank: String,
     modifier: Modifier = Modifier,
     viewModel: JournalViewModel = viewModel()
 ) {
-    val canPost = role == "ENGINEER" || role == "CHIEF"
-
+    val canPost = rank in listOf(
+        Ranks.CHIEF_ENGINEER, Ranks.SECOND_ENGINEER, Ranks.THIRD_ENGINEER,
+        Ranks.FOURTH_ENGINEER, Ranks.ELECTRICAL_OFFICER
+    )
     LaunchedEffect(crewId) { viewModel.setActiveCrew(crewId) }
 
     val uiState by viewModel.uiState.collectAsState()

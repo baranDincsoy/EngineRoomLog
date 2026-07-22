@@ -37,18 +37,22 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.engineroomlog.data.local.entity.ParameterEntity
 import com.example.engineroomlog.data.local.model.OperationalState
+import com.example.engineroomlog.data.local.model.Ranks
 
 @Composable
 fun LogEntryScreen(
     crewId: Long,
     modifier: Modifier = Modifier,
-    role: String,
+    rank: String,
     onExitConfirmed: () -> Unit,
     viewModel: LogEntryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
-    val canEditForm = role == "ENGINEER" || role == "CHIEF"
+    val canEditForm = rank in listOf(
+        Ranks.CHIEF_ENGINEER, Ranks.SECOND_ENGINEER, Ranks.THIRD_ENGINEER,
+        Ranks.FOURTH_ENGINEER, Ranks.ELECTRICAL_OFFICER
+    )
     var showSaveConfirm by remember { mutableStateOf(false) }
 
     var showExitWarning by remember { mutableStateOf(false) }
@@ -59,14 +63,10 @@ fun LogEntryScreen(
         showExitWarning = true
     }
 
-
-
-
     // Tell the ViewModel who is logged in (once per crewId)
     LaunchedEffect(crewId) {
         viewModel.setActiveCrew(crewId)
     }
-
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -92,8 +92,6 @@ fun LogEntryScreen(
                 ) { Text("In Port") }
             }
         }
-
-
         // --- Groups and their parameters ---
         uiState.visibleGroups.forEach { groupWithParams ->
 
@@ -118,7 +116,6 @@ fun LogEntryScreen(
                 )
             }
         }   // forEach ends
-
         if (canEditForm) {
             item(key = "add_parameter") {
                 TextButton(
@@ -126,9 +123,7 @@ fun LogEntryScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("+ Add parameter") }
             }
-
         }
-
         item(key = "remarks") {
             OutlinedTextField(
                 value = uiState.draftRemarks,
@@ -141,7 +136,6 @@ fun LogEntryScreen(
                     .padding(top = 16.dp)
             )
         }
-
         // --- Save button: once, AFTER the groups ---
         item(key = "save_button") {
             Button(
@@ -155,7 +149,6 @@ fun LogEntryScreen(
             }
         }
     }   // LazyColumn ends
-
     if (showAddDialog) {
         AddParameterDialog(
             groups = uiState.groups.map { it.group },
@@ -172,7 +165,6 @@ fun LogEntryScreen(
             },
         )
     }
-
     if (showSaveConfirm) {
         val filledCount = uiState.draftValues.count { it.value.isNotBlank() }
         AlertDialog(
@@ -192,7 +184,6 @@ fun LogEntryScreen(
             }
         )
     }
-
     if (showExitWarning) {
         AlertDialog(
             onDismissRequest = { showExitWarning = false },
@@ -209,8 +200,6 @@ fun LogEntryScreen(
             }
         )
     }
-
-
 }
 
 @Composable
