@@ -7,6 +7,7 @@ import com.example.engineroomlog.core.security.PasswordHasher
 import com.example.engineroomlog.data.local.database.DatabaseProvider
 import com.example.engineroomlog.data.local.entity.CrewMemberEntity
 import com.example.engineroomlog.data.local.model.CrewRole
+import com.example.engineroomlog.data.local.model.Ranks
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,15 +45,14 @@ class ManageCrewViewModel(application: Application) : AndroidViewModel(applicati
         name: String,
         rank: String,
         employeeNo: String,
-        password: String,
-        role: CrewRole
+        password: String
     ) {
         val trimmedName = name.trim()
         val trimmedNo = employeeNo.trim()
-        if (trimmedName.isEmpty() || trimmedNo.isEmpty() || password.isEmpty()) return
+        val trimmedRank = rank.trim()
+        if (trimmedName.isEmpty() || trimmedNo.isEmpty() || password.isEmpty() || trimmedRank.isEmpty()) return
 
         viewModelScope.launch {
-            // Employee numbers are unique across the app; reject duplicates up front
             if (crewDao.findByUsername(trimmedNo) != null) {
                 _errorMessage.value = "Employee no $trimmedNo is already in use"
                 return@launch
@@ -61,14 +61,21 @@ class ManageCrewViewModel(application: Application) : AndroidViewModel(applicati
                 CrewMemberEntity(
                     vesselProfileId = activeVesselId,
                     name = trimmedName,
-                    rank = rank.trim().ifEmpty { null },
-                    role = role,
+                    rank = trimmedRank,
+                    role = roleForRank(trimmedRank),   // legacy field, derived from rank
                     username = trimmedNo,
                     passwordHash = PasswordHasher.hash(password)
                 )
             )
             _errorMessage.value = null
         }
+    }
+
+    // Bridge: the legacy CrewRole is now derived from rank until we remove it entirely
+    private fun roleForRank(rank: String): CrewRole = when (rank) {
+        Ranks.CHIEF_ENGINEER, Ranks.SECOND_ENGINEER -> CrewRole.CHIEF
+        Ranks.THIRD_ENGINEER, Ranks.FOURTH_ENGINEER, Ranks.ELECTRICAL_OFFICER -> CrewRole.ENGINEER
+        else -> CrewRole.OILER
     }
 
     fun deactivate(member: CrewMemberEntity) {

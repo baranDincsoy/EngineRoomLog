@@ -12,13 +12,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -35,7 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.engineroomlog.data.local.entity.CrewMemberEntity
 import com.example.engineroomlog.data.local.model.CrewRole
+import com.example.engineroomlog.data.local.model.Ranks
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageCrewScreen(
     activeCrewId: Long,
@@ -93,10 +96,10 @@ fun ManageCrewScreen(
 
     if (showAddDialog) {
         var name by remember { mutableStateOf("") }
-        var rank by remember { mutableStateOf("") }
         var employeeNo by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
-        var role by remember { mutableStateOf(CrewRole.OILER) }
+        var rank by remember { mutableStateOf("") }
+        var rankExpanded by remember { mutableStateOf(false) }
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false; viewModel.clearError() },
@@ -106,10 +109,6 @@ fun ManageCrewScreen(
                     OutlinedTextField(
                         value = name, onValueChange = { name = it },
                         label = { Text("Name") }, singleLine = true
-                    )
-                    OutlinedTextField(
-                        value = rank, onValueChange = { rank = it },
-                        label = { Text("Rank (optional)") }, singleLine = true
                     )
                     OutlinedTextField(
                         value = employeeNo, onValueChange = { employeeNo = it },
@@ -122,17 +121,34 @@ fun ManageCrewScreen(
                         label = { Text("Password") }, singleLine = true,
                         visualTransformation = PasswordVisualTransformation()
                     )
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                        CrewRole.entries.forEachIndexed { index, r ->
-                            SegmentedButton(
-                                selected = role == r,
-                                onClick = { role = r },
-                                shape = SegmentedButtonDefaults.itemShape(
-                                    index = index, count = CrewRole.entries.size
+
+                    ExposedDropdownMenuBox(
+                        expanded = rankExpanded,
+                        onExpandedChange = { rankExpanded = it }
+                    ) {
+                        OutlinedTextField(
+                            value = rank,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Rank") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = rankExpanded)
+                            },
+                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = rankExpanded,
+                            onDismissRequest = { rankExpanded = false }
+                        ) {
+                            Ranks.ALL.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = { rank = option; rankExpanded = false }
                                 )
-                            ) { Text(r.name) }
+                            }
                         }
                     }
+
                     if (errorMessage != null) {
                         Text(text = errorMessage!!, color = MaterialTheme.colorScheme.error)
                     }
@@ -141,10 +157,11 @@ fun ManageCrewScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.addCrewMember(name, rank, employeeNo, password, role)
+                        viewModel.addCrewMember(name, rank, employeeNo, password)   // role kalktı
                         showAddDialog = false
                     },
-                    enabled = name.isNotBlank() && employeeNo.isNotBlank() && password.isNotBlank()
+                    enabled = name.isNotBlank() && employeeNo.isNotBlank() &&
+                            password.isNotBlank() && rank.isNotBlank()
                 ) { Text("Add") }
             },
             dismissButton = {
