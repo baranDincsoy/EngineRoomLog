@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -16,6 +17,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.engineroomlog.data.local.database.DatabaseProvider
 import com.example.engineroomlog.data.local.database.TemplateSeeder
+import com.example.engineroomlog.data.local.entity.RankPermissionEntity
+import com.example.engineroomlog.data.local.model.Permission
 import com.example.engineroomlog.data.local.model.Ranks
 import com.example.engineroomlog.ui.chiefsetup.ChiefSetupScreen
 import com.example.engineroomlog.ui.fleet.FleetScreen
@@ -60,7 +63,6 @@ object Routes {
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
-
     val context = androidx.compose.ui.platform.LocalContext.current
     var startDestination by androidx.compose.runtime.remember {
         androidx.compose.runtime.mutableStateOf<String?>(null)
@@ -72,12 +74,21 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
         // Backfill permission matrix for vessels created before the matrix existed
         vessels.forEach { v ->
-            val existing = database.rankPermissionDao().getMatrix(v.id).first()
+            val dao = database.rankPermissionDao()
+            val existing = dao.getMatrix(v.id).first()
             if (existing.isEmpty()) {
                 TemplateSeeder.seedDefaultPermissions(database, v.id)
+            } else {
+                // Chief must always be able to manage the matrix — otherwise nobody can
+                dao.grant(
+                    RankPermissionEntity(
+                        vesselProfileId = v.id,
+                        rank = Ranks.CHIEF_ENGINEER,
+                        permission = Permission.MANAGE_PERMISSIONS
+                    )
+                )
             }
         }
-
         startDestination = if (hasVessel) Routes.LOGIN else Routes.VESSEL_SETUP
     }
     if (startDestination == null) return   // one-frame blank while the check runs
@@ -88,12 +99,31 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
-    // Role travels with the HOME route args; remember it after login
+
+
     var currentRank by rememberSaveable { mutableStateOf("") }
-    val canEdit = currentRank == Ranks.CHIEF_ENGINEER || currentRank == Ranks.SECOND_ENGINEER ||
-            currentRank == Ranks.THIRD_ENGINEER || currentRank == Ranks.FOURTH_ENGINEER ||
-            currentRank == Ranks.ELECTRICAL_OFFICER
-    val canManageCrew = currentRank == Ranks.CHIEF_ENGINEER || currentRank == Ranks.SECOND_ENGINEER
+    var currentPermissions by remember { mutableStateOf(emptySet<Permission>()) }
+
+
+    // Resolve this rank's permissions from the vessel's matrix, once per rank change
+    LaunchedEffect(currentRank) {
+        if (currentRank.isEmpty()) {
+            currentPermissions = emptySet()
+        } else {
+            val database = DatabaseProvider.getDatabase(context)
+            val vessel = database.vesselProfileDao().getActiveVessels().first().firstOrNull()
+            currentPermissions = if (vessel == null) emptySet()
+            else database.rankPermissionDao()
+                .getPermissionsForRank(vessel.id, currentRank).toSet()
+        }
+    }
+
+    // Role travels with the HOME route args; remember it after login
+    val canEdit = Permission.EDIT_FORM in currentPermissions
+    val canManageCrew = Permission.MANAGE_CREW in currentPermissions
+    val canManageFleet = Permission.MANAGE_FLEET in currentPermissions
+    val canManagePermissions = Permission.MANAGE_PERMISSIONS in currentPermissions
+    val canPost = Permission.POST_ENTRY in currentPermissions
 
     val isLoggedInArea = currentRoute != null &&
             currentRoute != Routes.LOGIN &&
@@ -113,11 +143,12 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             },
             canEditForm = canEdit,
             canManageCrew = canManageCrew,
+            canManageFleet = canManageFleet,
+            canManagePermissions = canManagePermissions,
             onManageGroups = { navController.navigate(Routes.MANAGE_GROUPS) },
             onManageCrew = { navController.navigate(Routes.MANAGE_CREW) },
             onJournal = { navController.navigate(Routes.journalWith(currentCrewId, currentRank)) },
             onPdfList = { navController.navigate(Routes.PDF_LIST) },
-
             onEntry = { navController.popBackStack(Routes.HOME, inclusive = false) },
             onFleet = { navController.navigate(Routes.FLEET) },
             onPermissions = { navController.navigate(Routes.PERMISSIONS) },
@@ -132,6 +163,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 modifier = paddingModifier,
                 currentCrewId = currentCrewId,
                 startDestination = startDestination!!,
+                canPost = canPost,
+                canEditForm = canEdit,
                 onLoginResolved = { crewId, rank ->
                     currentCrewId = crewId
                     currentRank = rank
@@ -145,6 +178,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             modifier = modifier,
             currentCrewId = currentCrewId,
             startDestination = startDestination!!,
+            canPost = canPost,
+            canEditForm = canEdit,
             onLoginResolved = { crewId, rank ->
                 currentCrewId = crewId
                 currentRank = rank
@@ -159,9 +194,9 @@ private fun AppNavGraph(
     modifier: Modifier,
     currentCrewId: Long,
     startDestination: String,
+    canPost: Boolean,
+    canEditForm: Boolean,
     onLoginResolved: (Long, String) -> Unit,
-    
-
 ) {
     NavHost(
         navController = navController,
@@ -204,7 +239,7 @@ private fun AppNavGraph(
         ) { backStackEntry ->
             JournalScreen(
                 crewId = backStackEntry.arguments?.getLong("crewId") ?: 0L,
-                rank = backStackEntry.arguments?.getString("rank") ?: "OILER"
+                canPost = canPost
             )
         }
 
@@ -227,7 +262,7 @@ private fun AppNavGraph(
             val rank = backStackEntry.arguments?.getString("rank") ?: "OILER"
             LogEntryScreen(
                 crewId = crewId,
-                rank = rank,
+                canEditForm = canEditForm,
                 onExitConfirmed = { navController.popBackStack() }
             )
         }

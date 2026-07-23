@@ -28,6 +28,8 @@ fun AppScaffold(
     title: String,
     canEditForm: Boolean,
     canManageCrew: Boolean,   // CHIEF only
+    canManageFleet: Boolean,  // CHIEF only
+    canManagePermissions: Boolean,  // CHIEF only
     onManageGroups: () -> Unit,
     onManageCrew: () -> Unit,
     onSignOut: () -> Unit,
@@ -105,7 +107,7 @@ fun AppScaffold(
                     )
                 }
 
-                if (canManageCrew) {
+                if (canManagePermissions) {
                     NavigationDrawerItem(
                         label = { Text("Permissions") },
                         icon = { Icon(Icons.Default.Edit, contentDescription = null) },
@@ -117,7 +119,7 @@ fun AppScaffold(
                     )
                 }
 
-                if (canManageCrew) {
+                if (canManageFleet) {
                     NavigationDrawerItem(
                         label = { Text("Fleet connection") },
                         icon = { Icon(Icons.Default.Edit, contentDescription = null) },

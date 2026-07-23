@@ -8,6 +8,7 @@ enum class Permission {
     EDIT_FORM,          // manage groups & parameters
     MANAGE_CREW,        // add/remove crew, reset passwords
     MANAGE_FLEET,       // connect device to fleet, sync
+    MANAGE_PERMISSIONS, // manage permissions
     VIEW_JOURNAL,       // view the journal
     EXPORT_PDF,         // create & upload PDFs
     CREATE_WORK_ORDER   // reserved: work-order module (not built yet)

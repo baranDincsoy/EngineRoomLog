@@ -43,14 +43,11 @@ private val VALUE_COL_WIDTH = 84.dp
 @Composable
 fun JournalScreen(
     crewId: Long,
-    rank: String,
+    canPost: Boolean,
     modifier: Modifier = Modifier,
     viewModel: JournalViewModel = viewModel()
 ) {
-    val canPost = rank in listOf(
-        Ranks.CHIEF_ENGINEER, Ranks.SECOND_ENGINEER, Ranks.THIRD_ENGINEER,
-        Ranks.FOURTH_ENGINEER, Ranks.ELECTRICAL_OFFICER
-    )
+
     LaunchedEffect(crewId) { viewModel.setActiveCrew(crewId) }
 
     val uiState by viewModel.uiState.collectAsState()

@@ -42,17 +42,14 @@ import com.example.engineroomlog.data.local.model.Ranks
 @Composable
 fun LogEntryScreen(
     crewId: Long,
+    canEditForm: Boolean,
     modifier: Modifier = Modifier,
-    rank: String,
     onExitConfirmed: () -> Unit,
     viewModel: LogEntryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
-    val canEditForm = rank in listOf(
-        Ranks.CHIEF_ENGINEER, Ranks.SECOND_ENGINEER, Ranks.THIRD_ENGINEER,
-        Ranks.FOURTH_ENGINEER, Ranks.ELECTRICAL_OFFICER
-    )
+
     var showSaveConfirm by remember { mutableStateOf(false) }
 
     var showExitWarning by remember { mutableStateOf(false) }

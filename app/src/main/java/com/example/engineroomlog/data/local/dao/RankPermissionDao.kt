@@ -30,4 +30,11 @@ interface RankPermissionDao {
                 "WHERE vesselProfileId = :vesselId AND rank = :rank AND permission = :permission"
     )
     suspend fun hasPermission(vesselId: Long, rank: String, permission: Permission): Boolean
+
+    // All permissions granted to a rank — resolved once after login
+    @Query(
+        "SELECT permission FROM rank_permissions " +
+                "WHERE vesselProfileId = :vesselId AND rank = :rank"
+    )
+    suspend fun getPermissionsForRank(vesselId: Long, rank: String): List<Permission>
 }
