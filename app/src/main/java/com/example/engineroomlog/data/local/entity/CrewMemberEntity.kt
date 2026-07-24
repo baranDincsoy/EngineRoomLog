@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.example.engineroomlog.data.local.model.CrewRole
 
 @Entity(
     tableName = "crew_members",
@@ -26,8 +25,7 @@ data class CrewMemberEntity(
     val id: Long = 0,
     val vesselProfileId: Long,
     val name: String,
-    val rank: String?,
-    val role: CrewRole,
+    val rank: String,          // was String?, now required — drives permissions
     val username: String,
     val passwordHash: String,
     val isActive: Boolean = true

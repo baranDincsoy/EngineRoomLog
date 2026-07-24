@@ -35,7 +35,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.engineroomlog.data.local.entity.CrewMemberEntity
-import com.example.engineroomlog.data.local.model.CrewRole
 import com.example.engineroomlog.data.local.model.Ranks
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,8 +72,7 @@ fun ManageCrewScreen(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = member.name, style = MaterialTheme.typography.titleMedium)
                     Text(
-                        text = listOfNotNull(member.rank, member.role.name, "No: ${member.username}")
-                            .joinToString(" · "),
+                        text = "${member.rank} · No: ${member.username}",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -157,7 +155,7 @@ fun ManageCrewScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.addCrewMember(name, rank, employeeNo, password)   // role kalktı
+                        viewModel.addCrewMember(name, rank, employeeNo, password)
                         showAddDialog = false
                     },
                     enabled = name.isNotBlank() && employeeNo.isNotBlank() &&

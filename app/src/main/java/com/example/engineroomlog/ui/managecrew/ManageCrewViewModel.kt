@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.engineroomlog.core.security.PasswordHasher
 import com.example.engineroomlog.data.local.database.DatabaseProvider
 import com.example.engineroomlog.data.local.entity.CrewMemberEntity
-import com.example.engineroomlog.data.local.model.CrewRole
 import com.example.engineroomlog.data.local.model.Ranks
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -62,20 +61,12 @@ class ManageCrewViewModel(application: Application) : AndroidViewModel(applicati
                     vesselProfileId = activeVesselId,
                     name = trimmedName,
                     rank = trimmedRank,
-                    role = roleForRank(trimmedRank),   // legacy field, derived from rank
                     username = trimmedNo,
                     passwordHash = PasswordHasher.hash(password)
                 )
             )
             _errorMessage.value = null
         }
-    }
-
-    // Bridge: the legacy CrewRole is now derived from rank until we remove it entirely
-    private fun roleForRank(rank: String): CrewRole = when (rank) {
-        Ranks.CHIEF_ENGINEER, Ranks.SECOND_ENGINEER -> CrewRole.CHIEF
-        Ranks.THIRD_ENGINEER, Ranks.FOURTH_ENGINEER, Ranks.ELECTRICAL_OFFICER -> CrewRole.ENGINEER
-        else -> CrewRole.OILER
     }
 
     fun deactivate(member: CrewMemberEntity) {

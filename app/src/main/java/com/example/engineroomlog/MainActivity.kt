@@ -21,7 +21,6 @@ import com.example.engineroomlog.data.local.entity.ParameterEntity
 import com.example.engineroomlog.data.local.entity.ParameterGroupEntity
 import com.example.engineroomlog.data.local.entity.VesselProfileEntity
 import com.example.engineroomlog.data.local.model.Cadence
-import com.example.engineroomlog.data.local.model.CrewRole
 import com.example.engineroomlog.data.local.model.OperationalState
 import com.example.engineroomlog.ui.login.LoginScreen
 import com.example.engineroomlog.ui.navigation.AppNavHost

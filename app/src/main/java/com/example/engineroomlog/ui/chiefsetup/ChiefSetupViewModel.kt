@@ -7,7 +7,7 @@ import com.example.engineroomlog.core.security.PasswordHasher
 import com.example.engineroomlog.data.local.database.DatabaseProvider
 import com.example.engineroomlog.data.local.database.TemplateSeeder
 import com.example.engineroomlog.data.local.entity.CrewMemberEntity
-import com.example.engineroomlog.data.local.model.CrewRole
+import com.example.engineroomlog.data.local.model.Ranks
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -52,8 +52,7 @@ class ChiefSetupViewModel(application: Application) : AndroidViewModel(applicati
                 CrewMemberEntity(
                     vesselProfileId = vesselId,
                     name = name,
-                    rank = "Chief Engineer",
-                    role = CrewRole.CHIEF,
+                    rank = Ranks.CHIEF_ENGINEER,
                     username = no,
                     passwordHash = PasswordHasher.hash(s.password)
                 )

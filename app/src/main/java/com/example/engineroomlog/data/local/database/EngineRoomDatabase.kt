@@ -29,7 +29,7 @@ import com.example.engineroomlog.data.local.entity.VesselProfileEntity
         ReadingEntity::class,
         RankPermissionEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
