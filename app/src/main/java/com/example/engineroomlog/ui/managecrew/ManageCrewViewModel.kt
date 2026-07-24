@@ -77,4 +77,16 @@ class ManageCrewViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun clearError() { _errorMessage.value = null }
+
+    fun resetPassword(member: CrewMemberEntity, newPassword: String) {
+        if (newPassword.isBlank()) return
+        viewModelScope.launch {
+            crewDao.update(member.copy(passwordHash = PasswordHasher.hash(newPassword)))
+            _errorMessage.value = null
+        }
+    }
+
+
+
+
 }

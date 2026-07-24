@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
@@ -50,6 +51,7 @@ fun ManageCrewScreen(
 
     var showAddDialog by remember { mutableStateOf(false) }
     var deactivateTarget by remember { mutableStateOf<CrewMemberEntity?>(null) }
+    var resetTarget by remember { mutableStateOf<CrewMemberEntity?>(null) }
 
     LaunchedEffect(activeCrewId) { viewModel.activeCrewId = activeCrewId }
 
@@ -75,6 +77,9 @@ fun ManageCrewScreen(
                         text = "${member.rank} · No: ${member.username}",
                         style = MaterialTheme.typography.bodySmall
                     )
+                }
+                IconButton(onClick = { resetTarget = member }) {
+                    Icon(Icons.Default.Refresh, contentDescription = "Reset password")
                 }
                 if (member.id != activeCrewId) {
                     IconButton(onClick = { deactivateTarget = member }) {
@@ -181,6 +186,37 @@ fun ManageCrewScreen(
             },
             dismissButton = {
                 TextButton(onClick = { deactivateTarget = null }) { Text("Cancel") }
+            }
+        )
+    }
+    resetTarget?.let { member ->
+        var newPassword by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { resetTarget = null },
+            title = { Text("Reset password") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Set a temporary password for ${member.name}. They can change it later.")
+                    OutlinedTextField(
+                        value = newPassword,
+                        onValueChange = { newPassword = it },
+                        label = { Text("New password") },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.resetPassword(member, newPassword)
+                        resetTarget = null
+                    },
+                    enabled = newPassword.isNotBlank()
+                ) { Text("Reset") }
+            },
+            dismissButton = {
+                TextButton(onClick = { resetTarget = null }) { Text("Cancel") }
             }
         )
     }
