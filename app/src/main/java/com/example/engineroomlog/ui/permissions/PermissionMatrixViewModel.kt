@@ -47,8 +47,6 @@ class PermissionMatrixViewModel(application: Application) : AndroidViewModel(app
         _draft.value = if (cell in _draft.value) _draft.value - cell else _draft.value + cell
     }
 
-    fun isGranted(cell: Cell): Boolean = cell in _draft.value
-
     fun save() {
         viewModelScope.launch {
             val dao = db.rankPermissionDao()

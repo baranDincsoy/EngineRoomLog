@@ -37,4 +37,15 @@ interface RankPermissionDao {
                 "WHERE vesselProfileId = :vesselId AND rank = :rank"
     )
     suspend fun getPermissionsForRank(vesselId: Long, rank: String): List<Permission>
+
+    // How many ACTIVE crew currently hold a given permission (via their rank)?
+    // Used to prevent locking the vessel out of crew/permission management.
+    @Query(
+        "SELECT COUNT(*) FROM crew_members c " +
+                "WHERE c.vesselProfileId = :vesselId AND c.isActive = 1 " +
+                "AND EXISTS (SELECT 1 FROM rank_permissions rp " +
+                "WHERE rp.vesselProfileId = :vesselId AND rp.rank = c.rank " +
+                "AND rp.permission = :permission)"
+    )
+    suspend fun countCrewWithPermission(vesselId: Long, permission: Permission): Int
 }

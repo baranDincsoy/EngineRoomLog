@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.engineroomlog.core.security.PasswordHasher
 import com.example.engineroomlog.data.local.database.DatabaseProvider
 import com.example.engineroomlog.data.local.entity.CrewMemberEntity
+import com.example.engineroomlog.data.local.model.Permission
 import com.example.engineroomlog.data.local.model.Ranks
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -70,8 +71,19 @@ class ManageCrewViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun deactivate(member: CrewMemberEntity) {
-        if (member.id == activeCrewId) return   // safety net; UI hides the button too
+        if (member.id == activeCrewId) return
         viewModelScope.launch {
+            // Would this leave the vessel with fewer than 2 crew managers?
+            val managerCount = db.rankPermissionDao()
+                .countCrewWithPermission(activeVesselId, Permission.MANAGE_CREW)
+            val thisMemberManages = db.rankPermissionDao()
+                .hasPermission(activeVesselId, member.rank, Permission.MANAGE_CREW)
+
+            if (thisMemberManages && managerCount <= 2) {
+                _errorMessage.value =
+                    "Cannot deactivate — the vessel must keep at least two crew managers."
+                return@launch
+            }
             crewDao.update(member.copy(isActive = false))
         }
     }
@@ -85,6 +97,9 @@ class ManageCrewViewModel(application: Application) : AndroidViewModel(applicati
             _errorMessage.value = null
         }
     }
+
+
+
 
 
 

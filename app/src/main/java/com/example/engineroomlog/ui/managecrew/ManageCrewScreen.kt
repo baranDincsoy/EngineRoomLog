@@ -60,8 +60,19 @@ fun ManageCrewScreen(
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
+
         item(key = "back") {
             TextButton(onClick = onBack) { Text("< Back") }
+        }
+
+        if (errorMessage != null) {
+            item(key = "error") {
+                Text(
+                    text = errorMessage!!,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
         }
 
         items(items = crew, key = { "crew_${it.id}" }) { member ->
