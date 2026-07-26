@@ -82,6 +82,7 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
                             status = ewr.entry.status,
                             postedByName = ewr.entry.postedByName,
                             postedAt = ewr.entry.postedAt,
+                            collectedByEmployeeNo = ewr.entry.collectedByEmployeeNo,
                             values = ewr.readings.associate { it.parameterId to it.value }
                         )
                     }
@@ -179,6 +180,7 @@ class JournalViewModel(application: Application) : AndroidViewModel(application)
                         status = ewr.entry.status,
                         postedByName = ewr.entry.postedByName,
                         postedAt = ewr.entry.postedAt,
+                        collectedByEmployeeNo = ewr.entry.collectedByEmployeeNo,
                         values = ewr.readings.associate { it.parameterId to it.value }
                     )
                 }

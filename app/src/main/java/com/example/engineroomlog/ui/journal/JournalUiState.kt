@@ -14,6 +14,7 @@ data class JournalRow(
     val status: EntryStatus,
     val postedByName: String?,
     val postedAt: Long?,
+    val collectedByEmployeeNo: String?,
 )
 
 data class JournalUiState(

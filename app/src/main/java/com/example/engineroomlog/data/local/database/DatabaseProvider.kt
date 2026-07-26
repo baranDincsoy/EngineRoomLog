@@ -44,6 +44,18 @@ object DatabaseProvider {
         }
     }
 
+    private val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE log_entries ADD COLUMN collectedByEmployeeNo TEXT")
+            // Backfill existing entries from the crew table so old rows aren't blank
+            db.execSQL(
+                "UPDATE log_entries SET collectedByEmployeeNo = " +
+                        "(SELECT username FROM crew_members WHERE crew_members.id = log_entries.collectedByCrewId) " +
+                        "WHERE collectedByCrewId IS NOT NULL"
+            )
+        }
+    }
+
     // The single database instance for the whole app
     @Volatile
     private var instance: EngineRoomDatabase? = null
@@ -55,7 +67,7 @@ object DatabaseProvider {
                 EngineRoomDatabase::class.java,
                 "engine_room_log.db"
             )
-                .addMigrations(MIGRATION_4_5)
+                .addMigrations(MIGRATION_4_5, MIGRATION_5_6)
                 .build()
                 .also { instance = it }
         }

@@ -81,6 +81,7 @@ fun JournalScreen(
         }
 
         // Header row: time column + parameter names
+// Header row: time column + parameter names
         Row(modifier = Modifier.horizontalScroll(hScroll)) {
             Text(
                 text = "Time",
@@ -100,7 +101,13 @@ fun JournalScreen(
                     )
                 }
             }
+            Text(
+                text = "Collected by",
+                modifier = Modifier.width(VALUE_COL_WIDTH).padding(4.dp),
+                style = MaterialTheme.typography.labelMedium
+            )
         }
+
 
         // Data rows
         LazyColumn(  modifier = Modifier.weight(1f),) {
@@ -123,6 +130,11 @@ fun JournalScreen(
                             textAlign = TextAlign.Center
                         )
                     }
+                    Text(
+                        text = row.collectedByEmployeeNo ?: "—",
+                        modifier = Modifier.width(VALUE_COL_WIDTH).padding(4.dp),
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }

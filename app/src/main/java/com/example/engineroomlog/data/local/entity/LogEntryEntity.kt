@@ -40,4 +40,5 @@ data class LogEntryEntity(
     val isArchived: Boolean = false,
     val watch: String?,   // nullable: UMS ships leave this empty
     val syncedAt: Long? = null,   // when this entry last reached the fleet cloud; null = pending
+    val collectedByEmployeeNo: String? = null,   // snapshot: the number at the time of collection
 )

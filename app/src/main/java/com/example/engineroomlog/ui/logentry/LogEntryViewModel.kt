@@ -161,6 +161,7 @@ class LogEntryViewModel(application: Application) : AndroidViewModel(application
                 status = EntryStatus.SUBMITTED,
                 collectedByName = activeCrew?.name ?: "Unknown",
                 collectedByCrewId = activeCrew?.id,
+                collectedByEmployeeNo = activeCrew?.username,
                 collectedAt = System.currentTimeMillis(),
                 postedByName = null,
                 postedByCrewId = null,
