@@ -1,14 +1,24 @@
 package com.example.engineroomlog.ui.scaffold
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
@@ -48,14 +58,23 @@ fun AppScaffold(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                Text(
-                    text = "EngineRoomLog",
-                    modifier = Modifier.padding(16.dp)
-                )
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Text(
+                        text = "EngineRoomLog",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Engine room logbook",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                HorizontalDivider(modifier = Modifier.padding(bottom = 8.dp))
 
                 NavigationDrawerItem(
                     label = { Text("Entry") },
-                    icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                    icon = { Icon(Icons.Default.EditNote, contentDescription = null) },
                     selected = false,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -65,7 +84,7 @@ fun AppScaffold(
 
                 NavigationDrawerItem(
                     label = { Text("Journal") },
-                    icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null) },
                     selected = false,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -75,7 +94,7 @@ fun AppScaffold(
 
                 NavigationDrawerItem(
                     label = { Text("PDF list") },
-                    icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                    icon = { Icon(Icons.Default.PictureAsPdf, contentDescription = null) },
                     selected = false,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -86,7 +105,7 @@ fun AppScaffold(
                 if (canEditForm) {
                     NavigationDrawerItem(
                         label = { Text("Manage groups") },
-                        icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                        icon = { Icon(Icons.Default.Tune, contentDescription = null) },
                         selected = false,
                         onClick = {
                             scope.launch { drawerState.close() }
@@ -98,7 +117,7 @@ fun AppScaffold(
                 if (canManageCrew) {
                     NavigationDrawerItem(
                         label = { Text("Manage crew") },
-                        icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                        icon = { Icon(Icons.Default.Group, contentDescription = null) },
                         selected = false,
                         onClick = {
                             scope.launch { drawerState.close() }
@@ -110,7 +129,7 @@ fun AppScaffold(
                 if (canManagePermissions) {
                     NavigationDrawerItem(
                         label = { Text("Permissions") },
-                        icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                        icon = { Icon(Icons.Default.Lock, contentDescription = null) },
                         selected = false,
                         onClick = {
                             scope.launch { drawerState.close() }
@@ -122,7 +141,7 @@ fun AppScaffold(
                 if (canManageFleet) {
                     NavigationDrawerItem(
                         label = { Text("Fleet connection") },
-                        icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                        icon = { Icon(Icons.Default.CloudSync, contentDescription = null) },
                         selected = false,
                         onClick = {
                             scope.launch { drawerState.close() }

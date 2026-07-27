@@ -9,47 +9,60 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+private val LightColors = lightColorScheme(
+    primary = NavyPrimary,
     onPrimary = Color.White,
+    primaryContainer = NavyPrimaryContainer,
+    onPrimaryContainer = Color(0xFF001D33),
+    secondary = SteelSecondary,
     onSecondary = Color.White,
+    secondaryContainer = SteelSecondaryContainer,
+    tertiary = InstrumentTeal,
     onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    tertiaryContainer = InstrumentTealContainer,
+    error = AlarmRed,
+    onError = Color.White,
+    errorContainer = AlarmRedContainer,
+    background = SurfaceLight,
+    onBackground = Color(0xFF191C1E),
+    surface = SurfaceLight,
+    onSurface = Color(0xFF191C1E),
+    surfaceVariant = SurfaceVariantLight,
+    onSurfaceVariant = Color(0xFF41484D),
+    outline = OutlineLight
 )
 
+private val DarkColors = darkColorScheme(
+    primary = NavyPrimaryDark,
+    onPrimary = Color(0xFF003353),
+    primaryContainer = NavyPrimaryContainerDark,
+    onPrimaryContainer = Color(0xFFD1E4FF),
+    secondary = SteelSecondaryDark,
+    onSecondary = Color(0xFF1E3346),
+    secondaryContainer = SteelSecondaryContainerDark,
+    tertiary = InstrumentTealDark,
+    onTertiary = Color(0xFF00363D),
+    tertiaryContainer = InstrumentTealContainerDark,
+    error = AlarmRedDark,
+    onError = Color(0xFF601410),
+    errorContainer = AlarmRedContainerDark,
+    background = SurfaceDark,
+    onBackground = Color(0xFFE1E3E5),
+    surface = SurfaceDark,
+    onSurface = Color(0xFFE1E3E5),
+    surfaceVariant = SurfaceVariantDark,
+    onSurfaceVariant = Color(0xFFBFC8CE),
+    outline = OutlineDark
+)
 @Composable
 fun EngineRoomLogTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
-
+    val colorScheme = if (darkTheme) DarkColors else LightColors
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
