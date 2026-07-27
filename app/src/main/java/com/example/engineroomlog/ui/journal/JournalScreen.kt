@@ -166,7 +166,7 @@ fun JournalScreen(
                     // Who + when: the accountability line
                     Text(
                         text = "Collected by: ${row.collectedByName}" +
-                                (row.collectedByCrewId?.let { " (ID: $it)" } ?: ""),
+                                (row.collectedByEmployeeNo?.let { " ($it)" } ?: ""),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
