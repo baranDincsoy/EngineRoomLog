@@ -19,10 +19,13 @@ class PermissionMatrixViewModel(application: Application) : AndroidViewModel(app
 
     private val db = DatabaseProvider.getDatabase(application)
     private var vesselId: Long = 1L
-
+    // Crew ranks (active members only) — needed to check manager count against the draft
+    private var activeCrewRanks: List<String> = emptyList()
     // What's in the DB right now
     private val _saved = MutableStateFlow<Set<Cell>>(emptySet())
     val saved: StateFlow<Set<Cell>> = _saved.asStateFlow()
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     // What the user is editing (starts equal to saved)
     private val _draft = MutableStateFlow<Set<Cell>>(emptySet())
@@ -39,6 +42,7 @@ class PermissionMatrixViewModel(application: Application) : AndroidViewModel(app
                 .map { Cell(it.rank, it.permission) }.toSet()
             _saved.value = current
             _draft.value = current
+            activeCrewRanks = db.crewMemberDao().getActiveCrew(vesselId).first().map { it.rank }
         }
     }
 
@@ -48,6 +52,17 @@ class PermissionMatrixViewModel(application: Application) : AndroidViewModel(app
     }
 
     fun save() {
+        // Guard: someone must always be able to manage crew, or the vessel locks itself out
+        val managersAfter = activeCrewRanks.count { rank ->
+            Cell(rank, Permission.MANAGE_CREW) in _draft.value
+        }
+        if (managersAfter < 1) {
+            _errorMessage.value =
+                "At least one crew member must be able to manage crew."
+            return
+        }
+        _errorMessage.value = null
+
         viewModelScope.launch {
             val dao = db.rankPermissionDao()
             val toAdd = _draft.value - _saved.value

@@ -39,6 +39,7 @@ import com.example.engineroomlog.data.local.model.Ranks
 private val LABEL_COL = 150.dp
 private val CELL = 64.dp
 
+
 @Composable
 fun PermissionMatrixScreen(
     onBack: () -> Unit,
@@ -49,6 +50,7 @@ fun PermissionMatrixScreen(
     val draft by viewModel.draft.collectAsState()
     val hScroll = rememberScrollState()
     var confirm by remember { mutableStateOf<Cell?>(null) }
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
     Column(modifier = modifier.fillMaxSize().padding(12.dp)) {
         TextButton(onClick = onBack) { Text("< Back") }
@@ -117,6 +119,14 @@ fun PermissionMatrixScreen(
             }
         }
 
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage!!,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+        }
         Row(Modifier.fillMaxWidth().padding(top = 8.dp)) {
             TextButton(
                 onClick = { viewModel.discard() },
