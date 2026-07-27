@@ -198,8 +198,10 @@ class JournalPdfExporter(private val context: Context) {
                     "Posted by ${row.postedByName ?: "—"}" +
                             (row.postedAt?.let { " at ${stampFmt.format(Date(it))}" } ?: "")
                 else "UNSIGNED"
+                val collector = row.collectedByName +
+                        (row.collectedByEmployeeNo?.let { " ($it)" } ?: "")
                 c.drawText(
-                    "${timeFmt.format(Date(row.timestamp))}   Collected by ${row.collectedByName}   ·   $signed",
+                    "${timeFmt.format(Date(row.timestamp))}   Collected by $collector   ·   $signed",
                     margin, y, cellPaint
                 )
                 y += 12f
